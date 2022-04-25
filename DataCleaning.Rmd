@@ -1,0 +1,23 @@
+Read file and show row count and column names:
+```{r} 
+data <- read.csv("vehicles.csv") 
+nrow(data)
+colnames(data)
+```
+
+clean duplicate ID and display removed row count from original data
+```{r clean id}
+d_c_id = data[!duplicated(data$id),]
+nrow(data[duplicated(data$id),]) 
+```
+
+remove missing price (na / 0) and display removed row count from original data
+```{r clean price}
+d_c_price = data[!is.na(data$price) & data$price != 0,]
+nrow(data[data$price == 0,]) 
+```
+
+```{r all cleaned}
+clean = data[!duplicated(data$id) & !is.na(data$price) & data$price != 0,]
+clean
+```
