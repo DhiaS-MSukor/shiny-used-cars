@@ -1,0 +1,7 @@
+
+1. remove attribute 'image_url' entirely
+2. drive- remove any dates/ time/ "I WILL NOT..."/ ads. Examples to keep: 4wd, fwd, rwd, etc.
+3. size- remove any that is not a 'size'. Examples to keep: "full-size","mid-size", etc.
+4. type- remove any that is not a 'type'. Examples to keep: suv, bus, coupe, pickup, sedan, etc.
+5. paint_color- remove any that is not a color, eg. "THANK YOU FOR VIEWING MY AD.\", "we are not responsible..."
+6. standardize all words non-capitalised, separated by space 

@@ -1,0 +1,182 @@
+---
+title: "fuel-VIN cleaning"
+output: word_document
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## My part contains 5 variables' cleaning decisions, devided into 6 parts.
+
+**Descriptions** (may be useful when creating the codebook):
+
+**fuel** - Type of fuel used in vehicles.
+
+**odometer** - The distance traveled by a vehicle.
+
+**title_status** - a legal form refers to the ownership of a vehicle.
+
+**transmission** - Automatic or manual transmission.
+
+**VIN** - Vehicle Identification Number.
+
+## Part 0: A general look at the dataset.
+
+read in libraries
+
+```{r, message=FALSE}
+library(tidyverse)
+library(readr)
+library(VIM)
+library(DMwR2)
+library(Hmisc)
+```
+
+read in our data
+
+\*Notice: Use read_csv() instead of read.csv() because some columns contain "," in original csv file.
+
+```{r}
+df <- read_csv(file = 'vehicles.csv') 
+```
+
+```{r, echo=FALSE}
+print(paste('total missing values:',sum(is.na(df))))
+```
+
+#### See the distribution of missing values.
+
+```{r, VIM}
+aggr(df,labels=names(df),col=c('blue','red'),
+     numbrs=T,sortVars=T,Cex.axis=.7,gap=3)
+```
+Can see 'county' column is a missing column and 71.7% values in 'size' are missing.
+
+
+
+## Part 1: clean fuel
+
+#### compute missing values of fuel
+
+```{r, echo=FALSE}
+print(paste('NAs of fuel:',sum(is.na(df$fuel))))
+```
+
+#### Plan: Just drop all rows which fuel is missing.
+
+```{r clean fuel}
+d_c_fuel <- df[complete.cases(df$fuel),]
+sum(is.na(d_c_fuel$fuel))
+table(d_c_fuel$fuel)
+```
+
+
+
+## Part 2: clean VIN
+
+#### compute missing values of fuel
+
+```{r, echo=FALSE}
+print(paste('NAs of VIN',sum(is.na(d_c_fuel$VIN))))
+```
+
+#### Plan: Drop the 'VIN' column because it contains large missing values, and each obs. has a unique value, which is difficult to extract insights. 
+
+```{r clean VIN}
+d_c_VIN <- select(d_c_fuel,-VIN)
+dim(d_c_VIN)
+```
+
+
+
+## Part 3: clean transmission
+
+#### compute missing values of transmission
+
+```{r, echo=FALSE}
+print(paste('NAs of transmission',
+            sum(is.na(d_c_VIN$transmission))))
+```
+
+#### Plan: Just drop all rows which transmission is missing.
+
+```{r clean transmission}
+d_c_transmission <- d_c_VIN[complete.cases(d_c_VIN$transmission),]
+sum(is.na(d_c_transmission$transmission))
+table(d_c_transmission$transmission)
+```
+
+
+
+## Part 4: clean title_status
+
+#### compute missing values of title_status
+
+```{r, echo=FALSE}
+print(paste('NAs of title_status',
+            sum(is.na(d_c_transmission$title_status))))
+```
+
+see factor levels of title_status
+
+```{r}
+table(d_c_transmission$title_status)
+```
+/*contain 505 obs. with 'missing' label.
+
+#### Plan: Impute NAs of title_status with 'missing'.
+
+```{r clean title_status}
+d_c_title_status <- d_c_transmission
+d_c_title_status$title_status <- as.character(impute(d_c_title_status$title_status,'missing'))
+sum(is.na(d_c_title_status$title_status))
+table(d_c_title_status$title_status)
+```
+
+
+
+## Part 5: clean odometer
+
+compute missing values of odometer
+
+```{r, echo=FALSE}
+print(paste('NAs of odometer:',
+            sum(is.na(d_c_title_status$odometer))))
+```
+#### Plan: deal with outliers and impute NAs.
+
+**use boxplot to see the distribution of outliers**
+
+```{r}
+odo_bp <- boxplot(d_c_title_status$odometer,boxwex=0.7)
+odo_bp$stats
+```
+
+**impute NAs by mean**
+
+```{r}
+d_c_odometer <- d_c_title_status
+d_c_odometer[is.na(d_c_odometer$odometer),]$odometer <- odo_bp$stats[3]
+```
+
+**smooth outliers**
+
+```{r}
+d_c_odometer[d_c_odometer$odometer>odo_bp$stats[5],]$odometer <- odo_bp$stats[5]
+max(d_c_odometer$odometer)
+boxplot(d_c_odometer$odometer)
+```
+
+
+
+
+
+
+
+
+
+

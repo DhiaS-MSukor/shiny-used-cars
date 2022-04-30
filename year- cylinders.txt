@@ -1,0 +1,63 @@
+year：
+Delete rows with missing values；
+Delete rows with"-74.142895"," SSI"," gas saver","2021-05-03T17:30:52-0700","2021-05-03T10:40:27-0700","2021-05-03T17:30:41-0700","2021-04-16T14:47:00-0400","2021-04-12T14:43:04-0400"
+
+manufacturer:
+Replace missing values with 'unknown'; 
+Delete rows with " 40 mpg","2021-04-19T19:02:36-0400".
+
+model:
+Replace missing values with 'unknown'
+Delete rows with "0","50鈥檚",
+Replace "124 spider $25k">> "124 spider"
+Replace"z4 3.0i 3.0i">> "z4 3.0i"
+Replace"ZL1 Camaro">>"zl1 camaro"
+Replace"cx9 touring">>"cx-9 touring"
+Replace"PETERBUILT 379","peterbilt 379">>"Peterbilt 379"
+Replace"cmax">>"c-max"
+"cmax hybrid">>"c-max hybrid"
+Replace"camaro iroc-z28">>"camaro iroc z28"
+Replace"fx35 suv">>"fx35"
+"pilot exl", "pilot ex-l | 4wd, 3rd row">>"pilot ex-l"
+"PLYMOUTH BELVEDERE">>"plymouth belvedere"
+"CONVERTIBLE","convert">>"convertible"
+"cx9 grand touring">>"cx-9 grand touring"
+"cx9">>"cx-9"
+"cx7">>"cx-7"
+"cls550">>"cls 550"
+"s-class s 550">>"s-class s550"
+"convertable">>"convertible"
+"Cars,Trucks,Vans,Suvs","cars suvs trucks","Cars/trucks/suvs">>"cars-trucks-vans-suvs"
+"express g 2500">>"express g2500"
+"escape se eco boost">>"escape se ecoboost"
+"devville">>"deville"
+"explorer xls">>"explorer xlt"
+"EXPLORER">>"explorer"
+"e150">>"e-150"
+"E350","e350">>"e-350"
+"e150 conversion van">>"e-150 conversion van"
+"e350 super duty">>"e-350 super duty"
+"f350 super duty">>"f-350 super duty"
+"f350 super duty xlt">>"f-350 super duty xlt"
+"f-350 xl">>"f350 xl"
+"genesis 3.8l 4dr sedan">>""genesis 3.8 sedan 4d"
+"imiev">>"i-miev"
+"impeza">>"impreza"
+"INTERNATIONAL 4700">>"international 4400"
+"international 4300","INTERNATIONAL 4300">>"International 4300"
+"jetta 2.5l se">>"jetta 2.5 se"
+"IS 250","is250"》》“is 250
+“is300”》》“is 300”
+”john deer“，”John Deere“>>"john deere"
+"rav 4","rav-4">>"rav4"
+"riviera">>"riviera"
+“rs7”》》“rs 7”
+"srt-10","srt 10">>"srt10"
+
+condition:
+Replace missing values with 'unknown'
+Delete rows with " 4 cylinders","6 cylinders","8 cylinders"," 35 mpg"
+
+cylinders:
+Replace missing values with 'unknown'
+Delete rows with " gas","6 cylinders","8 cylinders"," 35 mpg"
