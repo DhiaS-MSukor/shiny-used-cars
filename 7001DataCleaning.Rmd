@@ -1,0 +1,235 @@
+---
+title: "DataCleaning-add some change"
+output: word_document
+editor_options: 
+  markdown: 
+    wrap: sentence
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+I add some changes base on Dhia's cleaning results. (use boldface&italic to mark)
+
+---
+
+# Library initialization
+
+```{r libraries, message=FALSE}
+library(tidyverse)
+library(readr)
+library(VIM)
+library(DMwR2)
+library(Hmisc)
+library(PTXQC)
+```
+
+
+
+# Compiled cleanup
+
+### compile all clean-up
+
+#### re-read data
+
+```{r copy-data}
+clean = read_csv(file = 'vehicles.csv')
+cor(clean$odometer,clean$price,use = 'complete.obs')
+```
+
+#### remove unused column
+
+***add url&image_url&region_url (useless), county(entirely missing)***
+
+```{r unused-column}
+clean <- select(clean,c(-VIN,-url,-image_url,-region_url,-county))
+
+```
+
+#### remove dirty rows
+
+***add: first remove rows contain NAs above 20%***
+
+```{r drop rows with many NAs}
+clean <- clean[-manyNAs(clean,nORp = 0.2),]
+
+```
+
+```{r remove-dirty-row}
+clean = clean[!clean$model %in% c("0","50鈥檚"),]
+clean = clean[!is.na(clean$year),]
+clean = clean[!is.na(clean$price),]
+clean = clean[clean$price != 0,]
+clean <- clean[complete.cases(clean$fuel),]
+clean <- clean[complete.cases(clean$transmission),]
+```
+
+#### format data
+
+```{r format-data}
+clean$region[clean$region == "columbia / jeff city"] <- "columbia"
+clean$region[clean$region == "corvallis/albany"] <- "albany"
+clean$region[clean$region == "dayton / springfield"] <- "springfield"
+clean$region[clean$region == "florence / muscle shoals"] <- "florence"
+clean$region[clean$region == "huntsville / decatur"] <- "decatur"
+clean$region[clean$region == "lafayette / west lafayette"] <- "lafayette"
+
+clean$model[clean$model == "124 spider $25k"] <- "124 spider" 
+clean$model[clean$model == "z4 3.0i 3.0i"] <- "z4 3.0i"
+clean$model[clean$model == "ZL1 Camaro"] <- "zl1 camaro" 
+clean$model[clean$model == "cx9 touring"] <-"cx-9 touring"
+clean$model[clean$model == "cmax"] <-"c-max"
+clean$model[clean$model == "cmax hybrid"] <-"c-max hybrid"
+clean$model[clean$model == "camaro iroc-z28"] <-"camaro iroc z28"
+clean$model[clean$model == "fx35 suv"] <-"fx35"
+clean$model[clean$model == "PLYMOUTH BELVEDERE"] <-"plymouth belvedere"
+clean$model[clean$model == "cx9 grand touring"] <-"cx-9 grand touring"
+clean$model[clean$model == "cx9"] <-"cx-9"
+clean$model[clean$model == "cx7"] <-"cx-7"
+clean$model[clean$model == "cls550"] <-"cls 550"
+clean$model[clean$model == "s-class s 550"] <-"s-class s550"
+clean$model[clean$model == "escape se eco boost"] <-"sescape se ecoboost"
+clean$model[clean$model == "devville"] <-"deville"
+clean$model[clean$model == "explorer xls"] <-"explorer xlt"
+clean$model[clean$model == "EXPLORER"] <-"explorer"
+clean$model[clean$model == "e150"] <-"e-150"
+clean$model[clean$model == "e150 conversion van"] <-"e-150 conversion van"
+clean$model[clean$model == "e350 super duty"] <-"e-350 super duty"
+clean$model[clean$model == "f350 super duty"] <-"f-350 super duty"
+clean$model[clean$model == "f350 super duty xlt"] <-"f-350 super duty xlt"
+clean$model[clean$model == "f-350 xl"] <-"f350 xl"
+clean$model[clean$model == "genesis 3.8l 4dr sedan"] <-"genesis 3.8 sedan 4d"
+clean$model[clean$model == "imiev"] <-"i-miev"
+clean$model[clean$model == "impeza"] <-"impreza"
+clean$model[clean$model == "riveira"] <-"riviera"
+clean$model[clean$model == "rs7"] <-"rs 7"
+clean$model[clean$model == "is300"] <-"300"
+clean$model[clean$model == "jetta 2.5l se"] <-"jetta 2.5 se"
+clean$model[clean$model == "INTERNATIONAL 4700"] <-"international 4700"
+clean$model[clean$model %in% c("PETERBUILT 379", "peterbilt 379")] <-"Peterbilt 379"    
+clean$model[clean$model %in% c("pilot exl", "pilot ex-l | 4wd, 3rd row")] <-"pilot ex-l"   
+clean$model[clean$model %in% c("Cars,Trucks,Vans,Suvs","cars suvs trucks", "Cars/trucks/suvs")] <-"cars-trucks-vans-suvs" 
+clean$model[clean$model %in% c("CONVERTIBLE", "convert", "convertable")] <-"convertible"      
+clean$model[clean$model %in% c("international 4300", "INTERNATIONAL 4300")] <-"International 4300"     
+clean$model[clean$model %in% c("IS 250", "is250")] <-"is 250"   
+clean$model[clean$model %in% c("john deer", "John Deere")] <-"john deere"       
+clean$model[clean$model %in% c("rav 4", "rav-4")] <-"rav4"          
+clean$model[clean$model %in% c("E350", "e350")] <-"e-350"        
+clean$model[clean$model %in% c("srt-10", "srt 10")] <-"srt10"
+ 
+clean$title_status <- as.character(impute(clean$title_status,'missing')) 
+clean$manufacturer <- as.character(impute(clean$manufacturer,'unknown'))  
+clean$model <- as.character(impute(clean$model,'unknown'))    
+clean$condition <- as.character(impute(clean$condition,'unknown'))
+clean$cylinders <- as.character(impute(clean$cylinders,'unknown'))    
+```
+
+***add a new column[posting_Year],refine the method of dealing with odometer***
+
+```{r clean-odometer}
+clean$posting_date <- format(as.Date(clean$posting_date, format="%d/%m/%Y"),
+                      "%d/%m/%Y")
+clean['posting_year'] <- as.numeric(format(as.Date(clean$posting_date,
+                                        format="%d/%m/%Y"),"%Y"))
+clean['posting_month'] <- as.numeric(format(as.Date(clean$posting_date,
+                                        format="%d/%m/%Y"),"%m"))
+df_odo <- clean[clean$odometer >= 999999|is.na(clean$odometer),]
+df_odo$odometer <- (df_odo$posting_year-df_odo$year)*12000+
+  df_odo$posting_month*1000
+clean[clean$odometer >= 999999|is.na(clean$odometer),]$odometer=df_odo$odometer
+clean <- select(clean, -posting_month)
+```
+
+for abnormal values and NA, change their odometer to age of cars multiply by 12,000 (which is considered as average mileage per year of a vehicle)
+
+---
+
+## ***Addition***
+
+#### Check remained NAs
+
+```{r clean check na}
+colSums(is.na(clean))
+```
+
+
+
+#### Drop rows: lat/long/description contain small NAs, just drop dirty rows.
+
+```{r drop lat/long/description missing rows}
+clean <- clean[!is.na(clean$lat),]
+clean <- clean[!is.na(clean$long),]
+clean <- clean[!is.na(clean$description),]
+```
+
+#### Impute: drive/size/type/paint_color with 'unknown'
+
+```{r impute drive/size/type/paint_color}
+clean$drive <- impute(clean$drive,'unknown')
+clean$size <- impute(clean$size,'unknown')
+clean$type <- impute(clean$type,'unknown')
+clean$paint_color <- impute(clean$paint_color,'unknown')
+```
+
+#### Count Nas --0
+
+```{r}
+sum(is.na(clean))
+```
+
+
+#### Output clean data
+
+```{r clean-output}
+View(clean)
+write.csv(clean, "clean_vehicles.csv",row.names=F)
+
+```
+
+## ***Some other process***
+
+#### Read data
+
+```{r read data}
+data=read.csv("clean_vehicles.csv")
+
+```
+
+#### See the structure of data
+
+```{r}
+glimpse(data)
+```
+
+#### Convert type of variables
+
+```{r convert-to-chr-type}
+
+data$id <- as.character(data$id)
+
+```
+
+```{r convert-to-factor-type}
+data$region <- as.factor(data$region)
+data$manufacturer <- as.factor(data$manufacturer)
+data$condition <- as.factor(data$condition)
+data$cylinders <- as.factor(data$cylinders)
+data$fuel <- as.factor(data$fuel)
+data$title_status <- as.factor(data$title_status)
+data$transmission <- as.factor(data$transmission)
+data$drive <- as.factor(data$drive)
+data$size <- as.factor(data$size)
+data$type <- as.factor(data$type)
+data$paint_color <- as.factor(data$paint_color)
+data$state <- as.factor(data$state)
+
+```
+
+#### save data
+
+```{r}
+write.csv(data, "clean_vehicles.csv",row.names=F)
+```
+
