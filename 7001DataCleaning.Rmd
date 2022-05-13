@@ -11,9 +11,10 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-I add some changes base on Dhia's cleaning results. (use boldface&italic to mark)
+I add some changes base on Dhia's cleaning results.
+(use boldface&italic to mark)
 
----
+------------------------------------------------------------------------
 
 # Library initialization
 
@@ -25,8 +26,6 @@ library(DMwR2)
 library(Hmisc)
 library(PTXQC)
 ```
-
-
 
 # Compiled cleanup
 
@@ -59,9 +58,9 @@ clean <- clean[-manyNAs(clean,nORp = 0.2),]
 
 ```{r remove-dirty-row}
 clean = clean[!clean$model %in% c("0","50鈥檚"),]
-clean = clean[!is.na(clean$year),]
+clean = clean[!is.na(clean$year) & clean$year >= 1998 & clean$year <= 2020,]
 clean = clean[!is.na(clean$price),]
-clean = clean[clean$price != 0,]
+clean = clean[clean$price > 1988 & clean$price < 44999,] 
 clean <- clean[complete.cases(clean$fuel),]
 clean <- clean[complete.cases(clean$transmission),]
 ```
@@ -135,16 +134,18 @@ clean['posting_year'] <- as.numeric(format(as.Date(clean$posting_date,
                                         format="%d/%m/%Y"),"%Y"))
 clean['posting_month'] <- as.numeric(format(as.Date(clean$posting_date,
                                         format="%d/%m/%Y"),"%m"))
-df_odo <- clean[clean$odometer >= 999999|is.na(clean$odometer),]
+df_odo <- clean[clean$odometer < 7209 | clean$odometer > 204142|is.na(clean$odometer),]
+df_odo$year_diff <- df_odo$posting_year-df_odo$year
 df_odo$odometer <- (df_odo$posting_year-df_odo$year)*12000+
   df_odo$posting_month*1000
-clean[clean$odometer >= 999999|is.na(clean$odometer),]$odometer=df_odo$odometer
+clean[clean$odometer < 7209 | clean$odometer > 204142 | is.na(clean$odometer),]$odometer = df_odo$odometer
 clean <- select(clean, -posting_month)
+clean <- clean[clean$odometer > 0,]
 ```
 
 for abnormal values and NA, change their odometer to age of cars multiply by 12,000 (which is considered as average mileage per year of a vehicle)
 
----
+------------------------------------------------------------------------
 
 ## ***Addition***
 
@@ -153,8 +154,6 @@ for abnormal values and NA, change their odometer to age of cars multiply by 12,
 ```{r clean check na}
 colSums(is.na(clean))
 ```
-
-
 
 #### Drop rows: lat/long/description contain small NAs, just drop dirty rows.
 
@@ -179,22 +178,21 @@ clean$paint_color <- impute(clean$paint_color,'unknown')
 sum(is.na(clean))
 ```
 
-
 #### Output clean data
 
 ```{r clean-output}
-View(clean)
-write.csv(clean, "clean_vehicles.csv",row.names=F)
+#View(clean)
+#write.csv(clean, "clean_vehicles.csv",row.names=F)
 
 ```
 
-## ***Some other process***
+## ***Misc.***
 
 #### Read data
 
 ```{r read data}
-data=read.csv("clean_vehicles.csv")
-
+#data=read.csv("clean_vehicles.csv")
+data = clean
 ```
 
 #### See the structure of data
@@ -202,6 +200,8 @@ data=read.csv("clean_vehicles.csv")
 ```{r}
 glimpse(data)
 ```
+
+## Data Type Conversion
 
 #### Convert type of variables
 
@@ -232,4 +232,3 @@ data$state <- as.factor(data$state)
 ```{r}
 write.csv(data, "clean_vehicles.csv",row.names=F)
 ```
-

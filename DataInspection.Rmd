@@ -1,0 +1,79 @@
+---
+title: "Data Inspection"
+output: word_document
+editor_options: 
+  markdown: 
+    wrap: sentence
+  chunk_output_type: inline
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Library initialization
+
+```{r libraries, message=FALSE}
+library(tidyverse)
+library(readr)
+library(VIM)
+library(DMwR2)
+library(Hmisc)
+library(PTXQC)
+library(dplyr)
+library(outliers)
+library(binr)
+```
+# General look at the Dataset
+
+#### Read file
+
+```{r file-read}
+dirty = read_csv(file = 'vehicles.csv')
+clean = read.csv("clean_vehicles.csv")
+```
+
+```{r price-inspection}  
+quantile(dirty[dirty$price > 0,]$price, probs = c(0.05, 0.95))
+p1 = dirty[dirty$price > 1988 & dirty$price < 44999,]
+summary(dirty$price)
+summary(p1$price)
+nrow(dirty)
+nrow(p1)
+
+hist(dirty$price)
+boxplot(dirty$price)
+hist(p1$price)
+boxplot(p1$price)
+```
+
+```{r odometer-inspection}
+quantile(dirty[dirty$odometer > 0,]$odometer, probs = c(0.05, 0.95, 0.99, 0.999), na.rm = TRUE)
+o1 = dirty[dirty$odometer > 7209  & dirty$odometer < 204142,]
+summary(clean$odometer)
+summary(o1$odometer)
+nrow(clean)
+nrow(o1)
+
+hist(clean$odometer)
+boxplot(clean$odometer)
+hist(o1$odometer)
+boxplot(o1$odometer)
+
+
+
+boxplot(clean[clean$odometer > 280000,]$odometer) 
+```
+
+```{r year-inspection}
+quantile(dirty[dirty$year > 0,]$year, probs = c(0.001, 0.01, 0.05, 0.95, 0.99, 0.999), na.rm = TRUE)
+y1 = dirty[dirty$year >= 1998 & dirty$year <= 2020,]
+summary(dirty$year)
+summary(y1$year)
+nrow(clean)
+nrow(y1)
+
+hist(clean$year)
+boxplot(clean$year)
+hist(y1$year)
+boxplot(y1$year) 
+```
