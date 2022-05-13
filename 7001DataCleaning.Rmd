@@ -11,9 +11,6 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-I add some changes base on Dhia's cleaning results.
-(use boldface&italic to mark)
-
 ------------------------------------------------------------------------
 
 # Library initialization
@@ -40,8 +37,6 @@ cor(clean$odometer,clean$price,use = 'complete.obs')
 
 #### remove unused column
 
-***add url&image_url&region_url (useless), county(entirely missing)***
-
 ```{r unused-column}
 clean <- select(clean,c(-VIN,-url,-image_url,-region_url,-county))
 
@@ -49,20 +44,21 @@ clean <- select(clean,c(-VIN,-url,-image_url,-region_url,-county))
 
 #### remove dirty rows
 
-***add: first remove rows contain NAs above 20%***
+**first remove rows contain NAs above 20%**
 
 ```{r drop rows with many NAs}
 clean <- clean[-manyNAs(clean,nORp = 0.2),]
-
 ```
 
-```{r remove-dirty-row}
+```{r remove-nonsense-row}
 clean = clean[!clean$model %in% c("0","50鈥檚"),]
-clean = clean[!is.na(clean$year) & clean$year >= 1998 & clean$year <= 2020,]
+clean = clean[!is.na(clean$year),]
 clean = clean[!is.na(clean$price),]
+```
+
+```{r remove-outliers}
+clean = clean[clean$year >= 1998 & clean$year <= 2020,] 
 clean = clean[clean$price > 1988 & clean$price < 44999,] 
-clean <- clean[complete.cases(clean$fuel),]
-clean <- clean[complete.cases(clean$transmission),]
 ```
 
 #### format data
@@ -117,12 +113,17 @@ clean$model[clean$model %in% c("john deer", "John Deere")] <-"john deere"
 clean$model[clean$model %in% c("rav 4", "rav-4")] <-"rav4"          
 clean$model[clean$model %in% c("E350", "e350")] <-"e-350"        
 clean$model[clean$model %in% c("srt-10", "srt 10")] <-"srt10"
- 
+```
+
+```{r impute-columns}
 clean$title_status <- as.character(impute(clean$title_status,'missing')) 
 clean$manufacturer <- as.character(impute(clean$manufacturer,'unknown'))  
 clean$model <- as.character(impute(clean$model,'unknown'))    
 clean$condition <- as.character(impute(clean$condition,'unknown'))
 clean$cylinders <- as.character(impute(clean$cylinders,'unknown'))    
+clean$description <- impute(clean$description,'none')
+clean$fuel <- as.character(impute(clean$fuel,'unknown'))    
+clean$transmission <- as.character(impute(clean$transmission,'unknown'))     
 ```
 
 ***add a new column[posting_Year],refine the method of dealing with odometer***
@@ -139,8 +140,7 @@ df_odo$year_diff <- df_odo$posting_year-df_odo$year
 df_odo$odometer <- (df_odo$posting_year-df_odo$year)*12000+
   df_odo$posting_month*1000
 clean[clean$odometer < 7209 | clean$odometer > 204142 | is.na(clean$odometer),]$odometer = df_odo$odometer
-clean <- select(clean, -posting_month)
-clean <- clean[clean$odometer > 0,]
+clean <- select(clean, -posting_month) 
 ```
 
 for abnormal values and NA, change their odometer to age of cars multiply by 12,000 (which is considered as average mileage per year of a vehicle)
@@ -160,7 +160,6 @@ colSums(is.na(clean))
 ```{r drop lat/long/description missing rows}
 clean <- clean[!is.na(clean$lat),]
 clean <- clean[!is.na(clean$long),]
-clean <- clean[!is.na(clean$description),]
 ```
 
 #### Impute: drive/size/type/paint_color with 'unknown'

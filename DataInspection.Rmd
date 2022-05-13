@@ -77,3 +77,8 @@ boxplot(clean$year)
 hist(y1$year)
 boxplot(y1$year) 
 ```
+
+```{r fuel-inspection}
+unique(clean$fuel)
+unique(clean$transmission)
+```
