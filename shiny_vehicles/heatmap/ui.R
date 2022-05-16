@@ -4,8 +4,9 @@ choice.make <- c('all')
 for (i in unique(df$manufacturer)){choice.make <- append(choice.make,i)}
 choice.type <- c('all')
 for (i in unique(df$type)){choice.type <- append(choice.type,i)}
-# Define UI for application that draws a histogram
-shinyUI(fluidPage(
+
+# page for used car heatmap
+used_car_heatmap <- fluidPage(
   
   titlePanel("Used car heatmap"),
   
@@ -19,4 +20,20 @@ shinyUI(fluidPage(
       plotOutput('heatmap')
     )
   )
-))
+)
+
+# Define UI for application that draws a histogram
+shinyUI(fluidPage(
+  
+  titlePanel("Shiny Used Car"),
+  
+  navlistPanel( 
+    widths=c(2,8), 
+    tabPanel("Heatmap", used_car_heatmap),
+    tabPanel("Component 2"), 
+    tabPanel("Component 3"),
+    tabPanel("Component 4"), 
+    tabPanel("Component 5"),
+  )
+)
+)
