@@ -22,6 +22,7 @@ library(VIM)
 library(DMwR2)
 library(Hmisc)
 library(PTXQC)
+library(stringr)
 ```
 
 # Compiled cleanup
@@ -147,7 +148,7 @@ for abnormal values and NA, change their odometer to age of cars multiply by 12,
 
 ------------------------------------------------------------------------
 
-## ***Addition***
+## ***Addition 1.0***
 
 #### Check remained NAs
 
@@ -155,9 +156,9 @@ for abnormal values and NA, change their odometer to age of cars multiply by 12,
 colSums(is.na(clean))
 ```
 
-#### Drop rows: lat/long/description contain small NAs, just drop dirty rows.
+#### Drop rows: lat/long contain small NAs, just drop dirty rows.
 
-```{r drop lat/long/description missing rows}
+```{r drop lat/long missing rows}
 clean <- clean[!is.na(clean$lat),]
 clean <- clean[!is.na(clean$long),]
 ```
@@ -177,57 +178,217 @@ clean$paint_color <- impute(clean$paint_color,'unknown')
 sum(is.na(clean))
 ```
 
+## ***Addition 2.0***
+
+### extract unknown data from description
+
+* for manufacturer, condition, cylinders, fuel, title_status, transmission, drive, size, type, paint_color.
+
+* this part will **waste huge time**, can just download the cleaned dataset from git.
+
+1. manufacturer
+
+```{r extract manufacturer}
+df.unknown = clean[clean$manufacturer=='unknown',]
+li_descr=as.list(df.unknown$description)
+make <- unique(clean$manufacturer)
+make <- make[make!='unknown']
+for (i in li_descr){
+  for (j in make){
+    if (str_detect(i,j)==T){
+      df.unknown[df.unknown$description==i,]$manufacturer <- j
+    }
+  }
+}
+clean[clean$manufacturer=='unknown',] <- df.unknown
+```
+
+2. condition
+
+```{r extract condition}
+df.unknown = clean[clean$condition=='unknown',]
+li_descr = as.list(df.unknown$description)
+condition <- unique(clean$condition)
+condition <- condition[condition!='unknown']
+for (i in li_descr){
+  for (j in condition){
+    if (str_detect(i,j)==T){
+      df.unknown[df.unknown$description==i,]$condition <- j
+    }
+  }
+}
+clean[clean$condition=='unknown',]$condition <- df.unknown$condition
+```
+
+3. cylinders
+
+```{r extract cylinders}
+df.unknown = clean[clean$cylinders=='unknown',]
+li_descr = as.list(df.unknown$description)
+cylinders <- unique(clean$cylinders)
+cylinders <- cylinders[cylinders!='unknown' & cylinders!='other']
+for (i in li_descr){
+  for (j in cylinders){
+    if (str_detect(i,j)==T){
+      df.unknown[df.unknown$description==i,]$cylinders <- j
+    }
+  }
+}
+clean[clean$cylinders=='unknown',]$cylinders <- df.unknown$cylinders
+```
+
+4. fuel
+
+```{r extract fuel}
+df.unknown = clean[clean$fuel=='unknown',]
+li_descr = as.list(df.unknown$description)
+fuel <- unique(clean$fuel)
+fuel <- fuel[fuel!='unknown' & fuel!='other']
+for (i in li_descr){
+  for (j in fuel){
+    if (str_detect(i,j)==T){
+      df.unknown[df.unknown$description==i,]$fuel <- j
+    }
+  }
+}
+clean[clean$fuel=='unknown',]$fuel <- df.unknown$fuel
+```
+
+5. title_status
+
+```{r extract title_status}
+df.unknown = clean[clean$title_status=='missing',]
+li_descr = as.list(df.unknown$description)
+title_status <- unique(clean$title_status)
+title_status <- title_status[title_status!='missing']
+for (i in li_descr){
+  for (j in title_status){
+    if (str_detect(i,j)==T){
+      df.unknown[df.unknown$description==i,]$title_status <- j
+    }
+  }
+}
+clean[clean$title_status=='missing',]$title_status <- df.unknown$title_status
+clean['title_status'][clean['title_status'] == 'missing'] <- 'unknown'
+```
+
+6. transmission
+
+```{r extract transmission}
+df.unknown = clean[clean$transmission=='unknown',]
+li_descr = as.list(df.unknown$description)
+transmission <- unique(clean$transmission)
+transmission <- transmission[transmission!='unknown' & transmission!='other']
+for (i in li_descr){
+  for (j in transmission){
+    if (str_detect(i,j)==T){
+      df.unknown[df.unknown$description==i,]$transmission <- j
+    }
+  }
+}
+clean[clean$transmission=='unknown',]$transmission <- df.unknown$transmission
+```
+
+7. drive
+
+```{r extract drive}
+df.unknown = clean[clean$drive=='unknown',]
+li_descr = as.list(df.unknown$description)
+drive <- unique(clean$drive)
+drive <- drive[drive!='unknown']
+for (i in li_descr){
+  for (j in drive){
+    if (str_detect(i,j)==T){
+      df.unknown[df.unknown$description==i,]$drive <- j
+    }
+  }
+}
+clean[clean$drive=='unknown',]$drive <- df.unknown$drive
+```
+
+8. size
+
+```{r extract size}
+df.unknown = clean[clean$size=='unknown',]
+li_descr = as.list(df.unknown$description)
+size <- unique(clean$size)
+size <- size[size!='unknown']
+for (i in li_descr){
+  for (j in size){
+    if (str_detect(i,j)==T){
+      df.unknown[df.unknown$description==i,]$size <- j
+    }
+  }
+}
+clean[clean$size=='unknown',]$size <- df.unknown$size
+```
+
+9. type
+
+```{r extract type}
+df.unknown = clean[clean$type=='unknown',]
+li_descr = as.list(df.unknown$description)
+type <- unique(clean$type)
+type <- type[type!='unknown' & type!='other']
+for (i in li_descr){
+  for (j in type){
+    if (str_detect(i,j)==T){
+      df.unknown[df.unknown$description==i,]$type <- j
+    }
+  }
+}
+clean[clean$type=='unknown',]$type <- df.unknown$type
+```
+
+
+10. paint_color
+
+```{r extract paint_color}
+df.unknown = clean[clean$paint_color=='unknown',]
+li_descr = as.list(df.unknown$description)
+paint_color <- unique(clean$paint_color)
+paint_color <- paint_color[paint_color!='unknown']
+for (i in li_descr){
+  for (j in paint_color){
+    if (str_detect(i,j)==T){
+      df.unknown[df.unknown$description==i,]$paint_color <- j
+    }
+  }
+}
+clean[clean$paint_color=='unknown',] <- df.unknown
+```
+
+#### drop description column
+
+```{r drop descr}
+clean = select(clean,-description)
+```
+
+#### add make_model column
+
+```{r}
+clean['make_model'] <- paste(clean$manufacturer,clean$model,sep=':')
+```
+
+
 #### Output clean data
 
-```{r clean-output}
-#View(clean)
-#write.csv(clean, "clean_vehicles.csv",row.names=F)
-
+```{r}
+write.csv(clean, "clean-vehicles.csv", row.names = F)
 ```
+
 
 ## ***Misc.***
 
 #### Read data
 
 ```{r read data}
-#data=read.csv("clean_vehicles.csv")
-data = clean
+data=read.csv("clean-vehicles.csv", stringsAsFactors = T)
+# use stringsAsFactors when reading csv
 ```
 
 #### See the structure of data
 
 ```{r}
 glimpse(data)
-```
-
-## Data Type Conversion
-
-#### Convert type of variables
-
-```{r convert-to-chr-type}
-
-data$id <- as.character(data$id)
-
-```
-
-```{r convert-to-factor-type}
-data$region <- as.factor(data$region)
-data$manufacturer <- as.factor(data$manufacturer)
-data$condition <- as.factor(data$condition)
-data$cylinders <- as.factor(data$cylinders)
-data$fuel <- as.factor(data$fuel)
-data$title_status <- as.factor(data$title_status)
-data$transmission <- as.factor(data$transmission)
-data$drive <- as.factor(data$drive)
-data$size <- as.factor(data$size)
-data$type <- as.factor(data$type)
-data$paint_color <- as.factor(data$paint_color)
-data$state <- as.factor(data$state)
-
-```
-
-#### save data
-
-```{r}
-write.csv(data, "clean_vehicles.csv",row.names=F)
 ```
