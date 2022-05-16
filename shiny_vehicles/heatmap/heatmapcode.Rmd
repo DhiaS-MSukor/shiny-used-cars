@@ -1,0 +1,175 @@
+---
+title: "heatmap"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r, message=F}
+library(ggplot2)
+library(dplyr)
+library(maps)
+library(usmap)
+```
+
+#### create new dataset (drop description & add 'make_model' column)
+
+```{r}
+df = read.csv('clean_vehicles.csv')
+df = select(df,-description)
+df['make_model'] <- paste(df$manufacturer,df$model,sep=':')
+write.csv(df,'vehicles_make_model.csv',row.names = F)
+
+```
+
+#### re-read data
+
+```{r}
+df = read.csv('vehicles_make_model.csv',stringsAsFactors = T)
+```
+
+#### heatmap for all makes and types
+
+```{r df.subset}
+df.subset <- df %>% 
+  group_by(state) %>% 
+  count(sort = T) %>% 
+  ungroup()
+
+```
+
+```{r heatmap.all.all}
+heatmap.all.all <- plot_usmap(data = df.subset,values = 'n',labels = T)+
+  labs(title = 'The distribution of used-car-postings quantity in US')+
+  scale_fill_gradientn(colors=rev(heat.colors(10)),na.value = 'grey',
+                             guide = guide_colourbar(barwidth = 24, 
+                                            barheight = .3,
+                                            direction = 'horizontal',
+                                            title = 'number of postings',
+                                            title.position = "top"))+
+  theme(plot.title = element_text(size=15), 
+        legend.position = "bottom",
+        legend.title = element_text(size=10), 
+        legend.text = element_text(size=5))
+heatmap.all.all
+```
+
+#### heatmap for selected make (such as acura) and all types
+
+```{r li_make}
+df.make <- split(df,df$manufacturer)
+li_make <- list()
+for (i in 1:length(df.make)){
+  li_make[[i]] <- df.make[[i]]%>% 
+  group_by(state) %>% 
+  count(sort = T) %>% 
+  ungroup()
+}
+names(li_make) <- sort(unique(df$manufacturer))
+
+```
+
+```{r heatmap.make.all}
+heatmap.acura.all <- plot_usmap(data = li_make[['acura']], 
+                           values = 'n', labels = T)+
+  labs(title = 'The distribution of used-car-postings quantity in US')+
+  scale_fill_gradientn(colors=rev(heat.colors(10)),na.value = 'grey',
+                       guide = guide_colourbar(barwidth = 24, 
+                                            barheight = .3,
+                                            direction = 'horizontal',
+                                            title = 'number of postings',
+                                            title.position = "top"))+
+  theme(plot.title = element_text(size=15), 
+        legend.position = "bottom",
+        legend.title = element_text(size=10), 
+        legend.text = element_text(size=5))
+heatmap.acura.all
+
+```
+
+#### heatmap for all makes and selected types (such as coupe) 
+
+```{r li_type}
+df.type <- split(df,df$type)
+li_type <- list()
+for (i in 1:length(df.type)){
+  li_type[[i]] <- df.type[[i]]%>% 
+  group_by(state) %>% 
+  count(sort = T) %>% 
+  ungroup()
+}
+names(li_type) <- sort(unique(df$type))
+
+```
+
+```{r heatmap.all.type}
+heatmap.all.coupe <- plot_usmap(data = li_type[['coupe']], 
+                           values = 'n', labels = T)+
+  labs(title = 'The distribution of used-car-postings quantity in US')+
+  scale_fill_gradientn(colors=rev(heat.colors(10)),na.value = 'grey',
+                       guide = guide_colourbar(barwidth = 24, 
+                                            barheight = .3,
+                                            direction = 'horizontal',
+                                            title = 'number of postings',
+                                            title.position = "top"))+
+  theme(plot.title = element_text(size=15), 
+        legend.position = "bottom",
+        legend.title = element_text(size=10), 
+        legend.text = element_text(size=5))
+heatmap.all.coupe
+
+```
+
+#### heatmap for selected make and type (such as acura_coupe)
+
+```{r li_make_type}
+# add a new column
+df['make_type'] <-  paste(df$manufacturer,df$type,sep = '_')
+df$make_type <- as.factor(df$make_type)
+df.make_type <- split(df,df$make_type)
+li_make_type <- list()
+for (i in 1:length(df.make_type)){
+  li_make_type[[i]] <- df.make_type[[i]]%>% 
+  group_by(state) %>% 
+  count(sort = T) %>% 
+  ungroup()
+}
+names(li_make_type) <- sort(unique(df$make_type))
+
+```
+
+```{r heatmap.make.type}
+heatmap.acura.coupe <- plot_usmap(data = li_make_type[['acura_coupe']],
+                           values = 'n', labels = T)+
+  labs(title = 'The distribution of used-car-postings quantity in US')+
+  scale_fill_gradientn(colors=rev(heat.colors(10)),na.value = 'grey',
+                       guide = guide_colourbar(barwidth = 24, 
+                                            barheight = .3,
+                                            direction = 'horizontal',
+                                            title = 'number of postings',
+                                            title.position = "top"))+
+  theme(plot.title = element_text(size=15), 
+        legend.position = "bottom",
+        legend.title = element_text(size=10), 
+        legend.text = element_text(size=5))
+heatmap.acura.coupe
+
+```
+
+#### heatmap for selected make and type (if have no posting of the selection, such as ferrari_bus)
+
+```{r heatmap.noposting}
+
+df.subset <- df %>% group_by(state) %>% count(sort = T) %>% ungroup()
+df.subset['n'] <- as.integer(NA)
+heatmap.ferrari.bus <- plot_usmap(data = df.subset, values = 'n', labels = T)+
+           labs(title = 'The distribution of used-car-postings quantity in US',tag = "There is no posting of this manufacturer and type you selected ")+scale_fill_gradientn(colors=rev(heat.colors(10)),na.value = 'grey')+
+           theme(plot.title = element_text(size=15), plot.tag.position = 'bottom')
+heatmap.ferrari.bus
+
+```
+
