@@ -16,20 +16,10 @@ library(maps)
 library(usmap)
 ```
 
-#### create new dataset (drop description & add 'make_model' column)
+#### read data
 
 ```{r}
-df = read.csv('clean_vehicles.csv')
-df = select(df,-description)
-df['make_model'] <- paste(df$manufacturer,df$model,sep=':')
-write.csv(df,'vehicles_make_model.csv',row.names = F)
-
-```
-
-#### re-read data
-
-```{r}
-df = read.csv('vehicles_make_model.csv',stringsAsFactors = T)
+df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
 ```
 
 #### heatmap for all makes and types
