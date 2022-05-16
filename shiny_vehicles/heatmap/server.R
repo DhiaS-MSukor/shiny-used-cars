@@ -6,7 +6,7 @@ library(ggplot2)
 library(dplyr)
 library(usmap)
 
-df = read.csv('vehicles_make_model.csv',stringsAsFactors = T)
+df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
 
 # Define server logic required to draw a heatmap
 shinyServer(function(input, output) {

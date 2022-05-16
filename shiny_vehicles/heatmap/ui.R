@@ -1,5 +1,5 @@
 library(shiny)
-df = read.csv('vehicles_make_model.csv',stringsAsFactors = T)
+df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
 choice.make <- c('all')
 for (i in unique(df$manufacturer)){choice.make <- append(choice.make,i)}
 choice.type <- c('all')
