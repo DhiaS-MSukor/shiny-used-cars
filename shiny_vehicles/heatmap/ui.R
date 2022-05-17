@@ -1,9 +1,17 @@
 library(shiny)
+library(comprehenr)
+
+# data read
 df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
-choice.make <- c('all')
-for (i in unique(df$manufacturer)){choice.make <- append(choice.make,i)}
-choice.type <- c('all')
-for (i in unique(df$type)){choice.type <- append(choice.type,i)}
+
+# add choices for make
+choice.manufacturer <- c('all', to_vec(for (i in unique(df$manufacturer)) i)) 
+
+# add choices for type
+choice.type <- c('all', to_vec(for (i in unique(df$type)) i)) 
+
+# add choices for model
+choice.model <- c('all', to_vec(for (i in unique(df$model)) i))
 
 # page for used car heatmap
 used_car_heatmap <- fluidPage(
@@ -12,7 +20,7 @@ used_car_heatmap <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      selectInput("make", label = "manufacturer", choices = choice.make),
+      selectInput("manufacturer", label = "manufacturer", choices = choice.manufacturer),
       selectInput("type", label = "type", choices = choice.type)
     ),
     
@@ -22,9 +30,8 @@ used_car_heatmap <- fluidPage(
   )
 )
 
-# Define UI for application that draws a histogram
-shinyUI(fluidPage(
-  
+# main page
+main_page <- fluidPage(
   titlePanel("Shiny Used Car"),
   
   navlistPanel( 
@@ -36,4 +43,6 @@ shinyUI(fluidPage(
     tabPanel("Component 5"),
   )
 )
-)
+
+# Define UI for application that draws a histogram
+shinyUI(main_page)
