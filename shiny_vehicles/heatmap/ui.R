@@ -30,6 +30,21 @@ used_car_heatmap <- fluidPage(
   )
 )
 
+# page for most available used car
+available_used_car <- fluidPage( 
+  titlePanel("Most available used car"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("manufacturer", label = "manufacturer", choices = choice.manufacturer),
+      selectInput("model", label = "model", choices = choice.model)
+    ),
+    
+    mainPanel(
+      plotOutput('most_available')
+    )
+  )
+)
+
 # main page
 main_page <- fluidPage(
   titlePanel("Shiny Used Car"),
@@ -37,7 +52,7 @@ main_page <- fluidPage(
   navlistPanel( 
     widths=c(2,8), 
     tabPanel("Heatmap", used_car_heatmap),
-    tabPanel("Component 2"), 
+    tabPanel("Most available used car", available_used_car), 
     tabPanel("Component 3"),
     tabPanel("Component 4"), 
     tabPanel("Component 5"),

@@ -41,14 +41,13 @@ df_filter <- function(input, column){
     factors <- df_copy[,'factors']  
     as.factor(factors)
   }
-  
-  # if many columns to filter
+     
+  # if many columns to filter 
+  column <- to_vec(for (c in column) if(reactiveValuesToList(input)[c] != 'all') c)
   if (length(column) > 1){
-    input_list <- reactiveValuesToList(input)
-    input_filter <- input_list[input_list != 'all']
     
     df_copy = data.frame(df)
-    df_copy$composite_factor = make_composite_factor(df_copy, names(input_filter))  
+    df_copy$composite_factor = make_composite_factor(df_copy, names(column))  
     
     df_split <- split(df_copy, df_copy$composite_factor)
     df_temp <- lapply(df_split, group_count_ungroup) 
@@ -56,7 +55,7 @@ df_filter <- function(input, column){
     
     get_input_by_column <- function(x) input[[x]]
     
-    input_factor <- paste(c(lapply(names(input_filter), get_input_by_column)),collapse ='_') 
+    input_factor <- paste(c(lapply(names(column), get_input_by_column)),collapse ='_') 
     # if input factor is valid
     if (input_factor %in% (names(df_temp))){
       df_temp[[input_factor]]
@@ -68,6 +67,9 @@ df_filter <- function(input, column){
     }
   }
   # if column to filter is unrestricted
+  else if (is.null(column) ){
+    group_count_ungroup(df) 
+  }
   else if (input[[column]] == 'all'){
     group_count_ungroup(df) 
   }
@@ -82,24 +84,9 @@ df_filter <- function(input, column){
 }
 
 # function to display dataframe based on input
-manufacturer_type_heatmap_dataframe <- function(input){
-  if (input$manufacturer=='all' & input$type=='all'){
-    df_temp = df_filter(input, 'manufacturer')
-    manufacturer_type_heatmap_display(df_temp)
-  }
-  else if (input$manufacturer!='all' & input$type=='all'){
-    df_temp = df_filter(input, 'manufacturer')
-    manufacturer_type_heatmap_display(df_temp) 
-  }
-  else if (input$manufacturer=='all' & input$type!='all'){ 
-    df_temp = df_filter(input, 'type')
-    manufacturer_type_heatmap_display(df_temp) 
-    
-  }
-  else {
-    df_temp = df_filter(input, c('manufacturer', 'type'))
-    manufacturer_type_heatmap_display(df_temp) 
-  }
+manufacturer_type_heatmap_dataframe <- function(input){  
+  df_temp = df_filter(input, c('manufacturer', 'type'))
+  manufacturer_type_heatmap_display(df_temp) 
 }
 
 # Define server logic required to draw a heatmap
