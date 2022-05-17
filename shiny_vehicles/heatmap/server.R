@@ -1,8 +1,9 @@
-library(shiny)
-library(shinythemes)
+
 library(htmlwidgets)
 library(plotly)
+library(sf)
 library(ggplot2)
+library(tidyverse)
 library(dplyr)
 library(usmap)
 library(comprehenr)
@@ -10,6 +11,9 @@ library(tidyr)
 
 # read data
 df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
+#download.file("http://www2.census.gov/geo/tiger/GENZ2015/shp/cb_2015_us_state_20m.zip", destfile = "states.zip")
+#unzip("states.zip")
+us_geo<-read_sf("states/cb_2015_us_state_20m.shp")
 
 # function to display heatmap based on dataframe
 manufacturer_type_heatmap_display <- function(df1){

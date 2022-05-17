@@ -25,7 +25,7 @@ used_car_heatmap <- fluidPage(
     ),
     
     mainPanel(
-      plotOutput('heatmap')
+      tmapOutput("map")
     )
   )
 )
