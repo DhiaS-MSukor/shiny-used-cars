@@ -7,3 +7,4 @@ clean_vehicles.csv
 DataCleaning.docx
 clean-vehicles.csv
 shiny_vehicles/heatmap/*.csv
+shiny_vehicles/heatmap/states/*

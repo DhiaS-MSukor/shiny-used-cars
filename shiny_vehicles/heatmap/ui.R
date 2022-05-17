@@ -1,4 +1,6 @@
 library(shiny)
+library(tmap)
+library(tmaptools)
 df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
 choice.make <- c('all')
 for (i in unique(df$manufacturer)){choice.make <- append(choice.make,i)}
@@ -16,7 +18,7 @@ shinyUI(fluidPage(
     ),
     
     mainPanel(
-      plotOutput('heatmap')
+      tmapOutput("map")
     )
   )
 ))
