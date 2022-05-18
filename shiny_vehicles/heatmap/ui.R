@@ -1,9 +1,9 @@
-library(shiny)
+library(shiny) 
 library(comprehenr)
 library(tmap)
 library(tmaptools)
 
-# data read
+# data read 
 df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
 
 # add choices for make
@@ -41,7 +41,7 @@ used_car_heatmap <- fluidPage(
     ),
     
     mainPanel(
-      tmapOutput("map")
+      tmapOutput("map") 
     )
   )
 )
@@ -94,7 +94,7 @@ price_boxwhisker <- fluidPage(
     ),
     
     mainPanel(
-      plotOutput('price_boxwhisker')
+      plotOutput('price_boxwhisker') 
     )
   )
 )

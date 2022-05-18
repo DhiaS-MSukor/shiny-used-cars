@@ -8,7 +8,7 @@ library(dplyr)
 library(tmap)
 library(tmaptools)
 library(shiny)
-library(shinythemes)
+library(shinythemes) 
 library(RColorBrewer) 
 library(hrbrthemes)
 library(viridis)
@@ -22,7 +22,7 @@ us_geo<-read_sf("states/cb_2015_us_state_20m.shp")
 
 
 used_car_tmap <- function(input){
-  renderTmap({
+  renderTmap({ 
     if (input$make=='all' & input$type=='all'){
       df.subset <- df %>% 
         left_join(x = df %>% group_by(state) %>% count(sort = T) %>% ungroup(),
@@ -56,7 +56,7 @@ used_car_tmap <- function(input){
                     y = aggregate(df.make[[i]]$price, by=list(type=df.make[[i]]$state),mean),
                     by = c('state'='type')) %>% 
           `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
-          mutate(state = toupper(state),`mean price` = as.integer(`mean price`))    # convert state.abb to uppercase
+          mutate(state = toupper(state),`mean price` = as.integer(`mean price`))    # convert state.abb to uppercase 
       }
       names(li_make) <- sort(unique(df$manufacturer))
       carmap <- left_join(us_geo, li_make[[input$make]], by = c('STUSPS'='state'), key.data = "full")
@@ -226,5 +226,5 @@ price_box <- function(input){
 shinyServer(function(input, output, session) {
   output$map <- used_car_tmap(input)
   output$most_available <- available_barchart(input, session)
-  output$price_boxwhisker <- price_box(input)
+  output$price_boxwhisker <- price_box(input) 
 })
