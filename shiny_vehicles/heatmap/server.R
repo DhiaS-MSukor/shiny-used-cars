@@ -212,9 +212,7 @@ price_box <- function(input){
     act1() %>% 
       ggplot() +
       geom_violin(width=1.0, mapping = aes(x=make_model, y=price, color='black', fill=make_model)) +
-      geom_boxplot(width=0.1, mapping = aes(x=make_model, y=price, color='black')) +
-      scale_color_viridis(discrete=TRUE) + 
-      theme_ipsum() +
+      geom_boxplot(width=0.1, mapping = aes(x=make_model, y=price, color='black')) +  
       theme(
         legend.position="none"
       ) +

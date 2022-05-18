@@ -7,3 +7,4 @@ DataCleaning.docx
 *.csv  
 shiny_vehicles/heatmap/states/
 *.zip
+shiny_vehicles/heatmap/rsconnect/shinyapps.io/dhiasyahmie/shiny_used_car.dcf
