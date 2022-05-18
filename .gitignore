@@ -2,9 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
-cleaning_Ruixue.docx
-clean_vehicles.csv
-DataCleaning.docx
-clean-vehicles.csv
-shiny_vehicles/heatmap/*.csv
-shiny_vehicles/heatmap/states/*
+cleaning_Ruixue.docx 
+DataCleaning.docx 
+*.csv  
+shiny_vehicles/heatmap/states/
+*.zip 

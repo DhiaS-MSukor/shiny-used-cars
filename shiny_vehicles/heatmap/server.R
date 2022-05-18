@@ -8,16 +8,21 @@ library(dplyr)
 library(tmap)
 library(tmaptools)
 library(shiny)
-library(shinythemes)
+library(shinythemes) 
+library(RColorBrewer) 
+library(hrbrthemes)
+library(viridis)
+library(tidyr)
+library(forcats)
+
 df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
 #download.file("http://www2.census.gov/geo/tiger/GENZ2015/shp/cb_2015_us_state_20m.zip", destfile = "states.zip")
-#unzip("states.zip")
+#unzip("states.zip", exdir = 'states')
 us_geo<-read_sf("states/cb_2015_us_state_20m.shp")
 
 
-# Define server logic required to draw a Tmap
-shinyServer(function(input, output) {
-  output$map <- renderTmap({
+used_car_tmap <- function(input){
+  renderTmap({ 
     if (input$make=='all' & input$type=='all'){
       df.subset <- df %>% 
         left_join(x = df %>% group_by(state) %>% count(sort = T) %>% ungroup(),
@@ -51,7 +56,7 @@ shinyServer(function(input, output) {
                     y = aggregate(df.make[[i]]$price, by=list(type=df.make[[i]]$state),mean),
                     by = c('state'='type')) %>% 
           `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
-          mutate(state = toupper(state),`mean price` = as.integer(`mean price`))    # convert state.abb to uppercase
+          mutate(state = toupper(state),`mean price` = as.integer(`mean price`))    # convert state.abb to uppercase 
       }
       names(li_make) <- sort(unique(df$manufacturer))
       carmap <- left_join(us_geo, li_make[[input$make]], by = c('STUSPS'='state'), key.data = "full")
@@ -147,4 +152,81 @@ shinyServer(function(input, output) {
       }
     }
   })
+}
+
+available_barchart <- function(input, session){
+  act1 <- reactive({   
+    data <- df[,c('year',"manufacturer","model")]    
+    
+    if (input$make_ab != 'all'){
+      data <- data[data$manufacturer == input$make_ab,]  
+    } 
+    
+    data <- data[data$year >= input$year_ab[1] & data$year <= input$year_ab[2],]
+    data$make_model <- paste(data$manufacturer, data$model)
+    data <- data %>% group_by(make_model) %>% count() 
+    
+    data <- data[order(data$n, decreasing = T),]
+    data <- data[0:input$top_ab,]
+    return(data)
+  })   
+  
+  renderPlot({   
+    barplot(act1()$n, 
+            names.arg = act1()$make_model, 
+            ylab='Number of postings',
+            las=2,
+            col = brewer.pal(5, "Set2") 
+    )
+  }) 
+}
+
+price_box <- function(input){
+  act1 <- reactive({   
+    data <- df[df$year >= input$year_pb[1] 
+               & df$year <= input$year_pb[2]
+               & df$odometer >= input$odometer_pb[1]
+               & df$odometer <= input$odometer_pb[2]
+               , c("manufacturer",'price', 'type', 'model','state')]  
+    
+    if (input$type_pb != 'all'){
+      data <- data[data$type == input$type_pb,]
+    }
+    if (input$state_pb != 'all'){
+      data <- data[data$state == input$state_pb,]
+    } 
+    
+    data$make_model <- paste(data$manufacturer, data$model)
+    
+    grouped <- data %>% group_by(make_model) %>% count()
+    grouped <- grouped[order(grouped$n, decreasing = T),]
+    grouped <- grouped[0:20,]
+     
+    data <- merge(data,grouped, by='make_model')
+    data <- data %>% mutate(make_model = fct_reorder(make_model, price))
+     
+    return(data)
+  })   
+  
+  renderPlot({   
+    act1() %>% 
+      ggplot() +
+      geom_violin(width=1.0, mapping = aes(x=make_model, y=price, color='black', fill=make_model)) +
+      geom_boxplot(width=0.1, mapping = aes(x=make_model, y=price, color='black')) +
+      scale_color_viridis(discrete=TRUE) + 
+      theme_ipsum() +
+      theme(
+        legend.position="none"
+      ) +
+      coord_flip() + # This switch X and Y axis and allows to get the horizontal version
+      xlab("") +
+      ylab("Price (US$)")
+  }, height = 1000) 
+}
+
+# Define server logic required to draw a Tmap
+shinyServer(function(input, output, session) {
+  output$map <- used_car_tmap(input)
+  output$most_available <- available_barchart(input, session)
+  output$price_boxwhisker <- price_box(input) 
 })
