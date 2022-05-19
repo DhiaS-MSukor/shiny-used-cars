@@ -15,6 +15,7 @@ library(viridis)
 library(tidyr)
 library(forcats)
 
+
 df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
 #download.file("http://www2.census.gov/geo/tiger/GENZ2015/shp/cb_2015_us_state_20m.zip", destfile = "states.zip")
 #unzip("states.zip", exdir = 'states')
@@ -153,6 +154,92 @@ used_car_tmap <- function(input){
     }
   })
 }
+used_car_tmap_smry <- function(input){
+  renderDataTable({ 
+    if (input$make=='all' & input$type=='all'){
+      df.subset <- df %>% 
+        left_join(x = df %>% group_by(state) %>% count(sort = T) %>% ungroup(),
+                  y = aggregate(df$price, by=list(type=df$state),mean),
+                  by = c('state'='type')) %>% 
+        `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
+        mutate(state = toupper(state),`mean price` = as.integer(`mean price`)) # convert state.abb to uppercase
+      us_geo <- select(as.data.frame(us_geo),c('NAME','STUSPS'))
+      smry <- left_join(df.subset,us_geo, by = c('state'='STUSPS'), key.data = "full")
+      smry <- select(smry,c('NAME','posting number','mean price'))
+      colnames(smry)[1] <- 'state'
+      smry
+    }else if (input$make!='all' & input$type=='all'){
+      df.make <- split(df, df$manufacturer)
+      li_make <- list()
+      for (i in 1:length(df.make)){
+        li_make[[i]] <- df.make[[i]] %>% 
+          left_join(x = df.make[[i]] %>% group_by(state) %>% count(sort = T) %>% ungroup(),
+                    y = aggregate(df.make[[i]]$price, by=list(type=df.make[[i]]$state),mean),
+                    by = c('state'='type')) %>% 
+          `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
+          mutate(state = toupper(state),`mean price` = as.integer(`mean price`))    # convert state.abb to uppercase 
+      }
+      names(li_make) <- sort(unique(df$manufacturer))
+      us_geo <- select(as.data.frame(us_geo),c('NAME','STUSPS'))
+      smry <- left_join(li_make[[input$make]],us_geo, by = c('state'='STUSPS'), key.data = "full")
+      smry <- select(smry,c('NAME','posting number','mean price'))
+      colnames(smry)[1] <- 'state'
+      smry
+    }else if (input$make=='all' & input$type!='all'){
+      df.type <- split(df,df$type)
+      li_type <- list()
+      for (i in 1:length(df.type)){
+        li_type[[i]] <- df.type[[i]] %>% 
+          left_join(x = df.type[[i]] %>% group_by(state) %>% count(sort = T) %>% ungroup(),
+                    y = aggregate(df.type[[i]]$price, by=list(type=df.type[[i]]$state),mean),
+                    by = c('state'='type')) %>% 
+          `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
+          mutate(state = toupper(state),`mean price` = as.integer(`mean price`))    # convert state.abb to uppercase
+      }
+      names(li_type) <- sort(unique(df$type))
+      us_geo <- select(as.data.frame(us_geo),c('NAME','STUSPS'))
+      smry <- left_join(li_type[[input$type]],us_geo, by = c('state'='STUSPS'), key.data = "full")
+      smry <- select(smry,c('NAME','posting number','mean price'))
+      colnames(smry)[1] <- 'state'
+      smry
+    }else {
+      df['make_type'] <-  paste(df$manufacturer,df$type,sep = '_')
+      df$make_type <- as.factor(df$make_type)
+      df.make_type <- split(df,df$make_type)
+      li_make_type <- list()
+      for (i in 1:length(df.make_type)){
+        li_make_type[[i]] <- df.make_type[[i]] %>% 
+          left_join(x = df.make_type[[i]] %>% group_by(state) %>% count(sort = T) %>% ungroup(),
+                    y = aggregate(df.make_type[[i]]$price, by=list(type=df.make_type[[i]]$state),mean),
+                    by = c('state'='type')) %>% 
+          `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
+          mutate(state = toupper(state),`mean price` = as.integer(`mean price`))    # convert state.abb to uppercase
+      }
+      names(li_make_type) <- sort(unique(df$make_type))
+      us_geo <- select(as.data.frame(us_geo),c('NAME','STUSPS'))
+      if ((paste(input$make,input$type,sep='_')) %in% (names(li_make_type))){
+        smry <- left_join(li_make_type[[paste(input$make,input$type,sep='_')]],us_geo, by = c('state'='STUSPS'), key.data = "full")
+        smry <- select(smry,c('NAME','posting number','mean price'))
+        colnames(smry)[1] <- 'state'
+        smry
+      }else {
+        df.subset <- df %>% 
+          left_join(x = df %>% group_by(state) %>% count(sort = T) %>% ungroup(),
+                    y = aggregate(df$price, by=list(type=df$state),mean),
+                    by = c('state'='type')) %>% 
+          `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
+          mutate(state = toupper(state),`mean price` = as.integer(`mean price`)) # convert state.abb to uppercase
+        us_geo <- select(as.data.frame(us_geo),c('NAME','STUSPS'))
+        smry <- left_join(df.subset,us_geo, by = c('state'='STUSPS'), key.data = "full")
+        smry <- select(smry,c('NAME','posting number','mean price'))
+        colnames(smry)[1] <- 'state'
+        smry$`posting number` <- 0
+        smry$`mean price` <- 'no data'
+        smry
+      }
+    }
+  })
+}
 
 available_barchart <- function(input, session){
   act1 <- reactive({   
@@ -227,6 +314,7 @@ price_box <- function(input){
 # Define server logic required to draw a Tmap
 shinyServer(function(input, output, session) {
   output$map <- used_car_tmap(input)
+  output$summary <- used_car_tmap_smry(input)
   output$most_available <- available_barchart(input, session)
   output$price_boxwhisker <- price_box(input) 
 })

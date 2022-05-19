@@ -2,17 +2,19 @@ library(shiny)
 library(comprehenr)
 library(tmap)
 library(tmaptools)
-
+#library(DT)
 # data read 
 df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
 
 # add choices for make
 choice.manufacturer <- to_vec(for (i in unique(df$manufacturer)) i)
+choice.manufacturer <- choice.manufacturer[choice.manufacturer!='unknown']
 choice.manufacturer <- choice.manufacturer[order(choice.manufacturer)]
 choice.manufacturer <- c('all', choice.manufacturer) 
 
 # add choices for type
 choice.type <- to_vec(for (i in unique(df$type)) i)
+choice.type <- choice.type[choice.type!='unknown']
 choice.type <- choice.type[order(choice.type)]
 choice.type <- c('all', choice.type)
 
@@ -41,7 +43,11 @@ used_car_heatmap <- fluidPage(
     ),
     
     mainPanel(
-      tmapOutput("map") 
+      tabsetPanel(
+        type = "tabs",
+        tabPanel("Map", tmapOutput("map")),
+        tabPanel("Summary", dataTableOutput("summary"))
+      )
     )
   )
 )
