@@ -32,14 +32,21 @@ used_car_tmap <- function(input){
         `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
         mutate(state = toupper(state),`mean price` = as.integer(`mean price`)) # convert state.abb to uppercase
       carmap <- left_join(us_geo, df.subset, by = c('STUSPS'='state'), key.data = "full")
-      carmap$`posting number` <- as.integer(carmap$`posting number`)
+      df.state <- split(df, df$state)
+      pop.make1 <- to_vec(for (i in 1:51) names(sort(table(df.state[[i]]$manufacturer),decreasing=TRUE)[1]))
+      pop.make2 <- to_vec(for (i in 1:51) names(sort(table(df.state[[i]]$manufacturer),decreasing=TRUE)[2]))
+      pop.make3 <- to_vec(for (i in 1:51) names(sort(table(df.state[[i]]$manufacturer),decreasing=TRUE)[3]))
+      df.pop.make <- data.frame(toupper(levels(df$state)),pop.make1,pop.make2,pop.make3)
+      names(df.pop.make) <- c('STUSPS','No.1 popular','No.2 popular','No.3 popular')
+      carmap <- left_join(carmap, df.pop.make, by = 'STUSPS')
       carmap <- carmap[carmap$NAME!='Alaska'&carmap$NAME!='Hawaii'&carmap$NAME!='Puerto Rico',]
-      tm <- tm_shape(carmap, name = 'all make&types',unit = 'km') +
+      tm <- tm_shape(carmap, unit = 'km') +
         tm_polygons(col = c('posting number','mean price'), 
                     id = 'NAME', style = "cont",
                     breaks = list(summary(carmap$`posting number`),summary(carmap$`mean price`)),
                     title = c('number of postings','average price'),
                     textNA = list('0','no posting'),
+                    popup.vars = c('posting number','mean price','No.1 popular','No.2 popular','No.3 popular'),
                     palette = get_brewer_pal("YlOrRd", plot = F, n = 10, 
                                              contrast = c(0.17, 0.77))) +
         tm_layout(title = 'The distribution of used-car-postings quantity in US')+
@@ -154,6 +161,7 @@ used_car_tmap <- function(input){
     }
   })
 }
+
 used_car_tmap_smry <- function(input){
   renderDataTable({ 
     if (input$make=='all' & input$type=='all'){
@@ -311,10 +319,23 @@ price_box <- function(input){
   }, height = 1000) 
 }
 
+type_bar <- function(input){
+  df['type_fuel'] <- paste(df$type,df$fuel,sep = '_')
+  sub_df <- aggregate(df$price, by=list(type=df$type_fuel),mean)
+  sub_df[c('type', 'fuel')] <- stringr::str_split_fixed(sub_df$type, '_', 2)
+  sub_df <- sub_df[sub_df$type!='unknown'&sub_df$fuel!='unknown',]
+  colnames(sub_df)[2] <- 'price'
+  renderPlot({
+    ggplot(sub_df, aes(x = type, y = price, fill = fuel))+
+      geom_bar(position = 'dodge', stat="identity", width = 0.7)+
+      xlim(input$type_gb)
+  })
+}
 # Define server logic required to draw a Tmap
 shinyServer(function(input, output, session) {
   output$map <- used_car_tmap(input)
   output$summary <- used_car_tmap_smry(input)
   output$most_available <- available_barchart(input, session)
   output$price_boxwhisker <- price_box(input) 
+  output$grouped_barplot <- type_bar(input)
 })
