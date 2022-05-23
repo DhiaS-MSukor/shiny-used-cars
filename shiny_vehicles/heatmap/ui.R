@@ -2,17 +2,19 @@ library(shiny)
 library(comprehenr)
 library(tmap)
 library(tmaptools)
-
+#library(DT)
 # data read 
 df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
-
+us_geo<-read_sf("states/cb_2015_us_state_20m.shp")
 # add choices for make
 choice.manufacturer <- to_vec(for (i in unique(df$manufacturer)) i)
+choice.manufacturer <- choice.manufacturer[choice.manufacturer!='unknown']
 choice.manufacturer <- choice.manufacturer[order(choice.manufacturer)]
 choice.manufacturer <- c('all', choice.manufacturer) 
 
 # add choices for type
 choice.type <- to_vec(for (i in unique(df$type)) i)
+choice.type <- choice.type[choice.type!='unknown']
 choice.type <- choice.type[order(choice.type)]
 choice.type <- c('all', choice.type)
 
@@ -41,7 +43,11 @@ used_car_heatmap <- fluidPage(
     ),
     
     mainPanel(
-      tmapOutput("map") 
+      tabsetPanel(
+        type = "tabs",
+        tabPanel("Map", tmapOutput("map")),
+        tabPanel("Summary", dataTableOutput("summary"))
+      )
     )
   )
 )
@@ -99,6 +105,23 @@ price_boxwhisker <- fluidPage(
   )
 )
 
+# page for price of type of vehicles for each type of fuel
+grouped_barplot <- fluidPage(
+  titlePanel("Price of type (grouped by fuel)"),
+  sidebarLayout(
+    sidebarPanel(
+      checkboxGroupInput(inputId = "type_gb",
+                         label = "Choose type",
+                         choices = choice.type[choice.type!='all'],
+                         selected = c('convertible', 'coupe', 'offroad', 'sedan', 'SUV', 'wagon'))
+    ),
+    
+    mainPanel(
+      plotOutput('grouped_barplot', width = '150%')
+    )
+  )
+)
+
 # main page
 main_page <- fluidPage(
   titlePanel("Shiny Used Car"),
@@ -108,6 +131,7 @@ main_page <- fluidPage(
     tabPanel("Used car availability heatmap", used_car_heatmap),
     tabPanel("Most available used car", available_barchart), 
     tabPanel("Prices of typical used cars", price_boxwhisker), 
+    tabPanel("Prices of cars for each type of fuel", grouped_barplot)
   )
 )
 
