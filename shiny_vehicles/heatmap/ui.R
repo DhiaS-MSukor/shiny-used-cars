@@ -2,10 +2,13 @@ library(shiny)
 library(comprehenr)
 library(tmap)
 library(tmaptools)
+library(sf)
 #library(DT)
+
 # data read 
 df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
 us_geo<-read_sf("states/cb_2015_us_state_20m.shp")
+
 # add choices for make
 choice.manufacturer <- to_vec(for (i in unique(df$manufacturer)) i)
 choice.manufacturer <- choice.manufacturer[choice.manufacturer!='unknown']
@@ -80,7 +83,7 @@ available_barchart <- fluidPage(
 
 # page for most available used car
 price_boxwhisker <- fluidPage( 
-  titlePanel("Prices of typical used cars"),
+  titlePanel("Price of top 20 most common used cars"),
   sidebarLayout(
     sidebarPanel(
       selectInput("state_pb", label = "state", choices = choice.state),
@@ -100,7 +103,7 @@ price_boxwhisker <- fluidPage(
     ),
     
     mainPanel(
-      plotOutput('price_boxwhisker') 
+      plotOutput('price_boxwhisker')
     )
   )
 )
@@ -130,7 +133,7 @@ main_page <- fluidPage(
     widths=c(2,8), 
     tabPanel("Used car availability heatmap", used_car_heatmap),
     tabPanel("Most available used car", available_barchart), 
-    tabPanel("Prices of typical used cars", price_boxwhisker), 
+    tabPanel("Price of top 20 most common used cars", price_boxwhisker), 
     tabPanel("Prices of cars for each type of fuel", grouped_barplot)
   )
 )
