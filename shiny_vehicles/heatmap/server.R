@@ -15,7 +15,6 @@ library(viridis)
 library(tidyr)
 library(forcats)
 
-
 df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
 #download.file("http://www2.census.gov/geo/tiger/GENZ2015/shp/cb_2015_us_state_20m.zip", destfile = "states.zip")
 #unzip("states.zip", exdir = 'states')
@@ -266,16 +265,16 @@ available_barchart <- function(input, session){
     return(data)
   })   
   
-  renderPlot({   
-    barplot(act1()$n, 
-            names.arg = act1()$make_model, 
-            ylab='Number of postings',
-            las=2,
-            col = brewer.pal(5, "Set2") 
-    )
-  }) 
+  renderPlot({
+    act1() %>%
+      ggplot(aes(x=reorder(make_model, -n), y=n, fill=make_model)) +
+      geom_bar(stat = "identity", color='black') +
+      xlab("") +
+      ylab("Number of postings") +
+      theme(legend.position="none", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  }, height = 750) 
 }
-
+ 
 price_box <- function(input){
   act1 <- reactive({   
     data <- df[df$year >= input$year_pb[1] 
@@ -314,7 +313,7 @@ price_box <- function(input){
       coord_flip() + # This switch X and Y axis and allows to get the horizontal version
       xlab("") +
       ylab("Price (US$)")
-  }, height = 1000) 
+  }, height = 750) 
 }
 
 type_bar <- function(input){
@@ -329,11 +328,12 @@ type_bar <- function(input){
       xlim(input$type_gb)
   })
 }
+
 # Define server logic required to draw a Tmap
 shinyServer(function(input, output, session) {
   output$map <- used_car_tmap(input)
   output$summary <- used_car_tmap_smry(input)
   output$most_available <- available_barchart(input, session)
-  output$price_boxwhisker <- price_box(input) 
+  output$price_boxwhisker <- price_box(input)  
   output$grouped_barplot <- type_bar(input)
 })
