@@ -274,7 +274,7 @@ available_barchart <- function(input, session){
       theme(legend.position="none", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   }, height = 750) 
 }
- 
+
 price_box <- function(input){
   act1 <- reactive({   
     data <- df[df$year >= input$year_pb[1] 
@@ -295,10 +295,10 @@ price_box <- function(input){
     grouped <- data %>% group_by(make_model) %>% count()
     grouped <- grouped[order(grouped$n, decreasing = T),]
     grouped <- grouped[0:20,]
-     
+    
     data <- merge(data,grouped, by='make_model')
     data <- data %>% mutate(make_model = fct_reorder(make_model, price))
-     
+    
     return(data)
   })   
   
@@ -313,6 +313,91 @@ price_box <- function(input){
       coord_flip() + # This switch X and Y axis and allows to get the horizontal version
       xlab("") +
       ylab("Price (US$)")
+  }, height = 750) 
+}
+
+type_gam <- function(input){
+  act1 <- reactive({   
+    data <- df[df$type %in% input$type_tl
+               , c('price', 'type', 'year')]     
+    
+    return(data)
+  })   
+  
+  renderPlot({   
+    act1() %>% 
+      ggplot(aes(x=year, y=price, group=type, color=type, fill=type)) +  
+      geom_smooth(method='gam', se=TRUE) +
+      xlab("") +
+      ylab("Price (US$)")
+  }, height = 750) 
+}
+
+type_lm <- function(input){
+  act1 <- reactive({   
+    data <- df[df$type %in% input$type_tl
+               , c('price', 'type', 'year')]     
+    
+    return(data)
+  })   
+  
+  renderPlot({   
+    act1() %>% 
+      ggplot(aes(x=year, y=price, group=type, color=type, fill=type)) +  
+      geom_smooth(method='lm', se=TRUE) +
+      xlab("") +
+      ylab("Price (US$)")
+  }, height = 750) 
+}
+
+type_line <- function(input){
+  act1 <- reactive({   
+    data <- df[df$type %in% input$type_tl
+               , c('price', 'type', 'year')]
+    
+    data$type_year <- paste(data$type, data$year, sep='_')
+    data <- data %>% group_by(type_year) %>% summarise(price=median(price))
+    data <- data %>% separate(type_year, c('type', 'year'), extra='drop', sep='_') 
+    
+    return(data)
+  })   
+  
+  renderPlot({   
+    act1() %>% 
+      ggplot(aes(x=year, y=price, group=type, color=type, fill=type)) + 
+      geom_point(shape=21, size=6) +  
+      geom_line(size=1.2)+
+      xlab("") +
+      ylab("Median price (US$)")
+  }, height = 750) 
+}
+
+type_facetline <- function(input){
+  act1 <- reactive({   
+    data <- df[, c('price', 'type', 'year')]
+    
+    data$type_year <- paste(data$type, data$year, sep='_')
+    data <- data %>% group_by(type_year) %>% summarise(price=median(price))
+    data <- data %>% separate(type_year, c('type', 'year'), extra='drop', sep='_')
+    data$type2 <- data$type
+    
+    return(data)
+  })   
+  
+  renderPlot({   
+    act1() %>% 
+      ggplot(aes(x=year, y=price, group=type)) +  
+      geom_line( data=act1() %>% dplyr::select(-type), aes(group=type2), color="grey") +
+      geom_line( aes(color=type), size=1.2)+
+      xlab("") +
+      ylab("Median price (US$)")+
+      theme(
+        legend.position="none",
+        panel.spacing = unit(0.1, "lines"), 
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        plot.title = element_text(size=14)
+      )+ 
+      facet_wrap(~type, ncol=3)
   }, height = 750) 
 }
 
@@ -336,4 +421,8 @@ shinyServer(function(input, output, session) {
   output$most_available <- available_barchart(input, session)
   output$price_boxwhisker <- price_box(input)  
   output$grouped_barplot <- type_bar(input)
+  output$type_gam <- type_gam(input)
+  output$type_lm <- type_lm(input)
+  output$type_line <- type_line(input)
+  output$type_facetline <- type_facetline(input)
 })
