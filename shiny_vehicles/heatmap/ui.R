@@ -127,7 +127,7 @@ grouped_barplot <- fluidPage(
 
 # page for price of type of vehicles by year
 type_lineplot <- fluidPage( 
-  titlePanel("Prices of used cars over time"),
+  titlePanel("Price trends of used cars by type"),
   sidebarLayout(
     sidebarPanel( 
       checkboxGroupInput(inputId = "type_tl",
@@ -139,10 +139,31 @@ type_lineplot <- fluidPage(
     mainPanel(
       tabsetPanel(
         type = "tabs",
-        tabPanel("Medians", plotOutput('type_line')),
-        tabPanel("Medians against all types", plotOutput('type_facetline')),
-        tabPanel("Linear smoothed", plotOutput("type_lm")),
-        tabPanel("Generalized additive smoothed", plotOutput("type_gam"))
+        tabPanel("Compiled", plotOutput('type_line')),
+        tabPanel("Faceted", plotOutput('type_facetline')), 
+      ) 
+    )
+  )
+)
+
+# page for price of type of vehicles by year and manufacturer
+type_make_trend <- fluidPage( 
+  titlePanel("Price trends of used cars by manufacturer and type"),
+  sidebarLayout(
+    sidebarPanel(  
+      checkboxGroupInput(inputId = "make_tr",
+                         label = "Choose manufacturer",
+                         choices = choice.manufacturer[choice.manufacturer!='all'], 
+                         selected = c( 'bmw', 'audi'))
+    ),
+    
+    mainPanel(
+      tabsetPanel(
+        type = "tabs", 
+        tabPanel("Medians", plotOutput("type_make_line")),
+        tabPanel("Linear smoothed", plotOutput("type_make_lm")),
+        tabPanel("Generalized additive smoothed", plotOutput("type_make_gam")),
+        tabPanel("Local polynomial smoothed", plotOutput("type_make_loess"))
       ) 
     )
   )
@@ -158,7 +179,8 @@ main_page <- fluidPage(
     tabPanel("Most available used car", available_barchart), 
     tabPanel("Price of top 20 most common used cars", price_boxwhisker), 
     tabPanel("Prices of cars for each type of fuel", grouped_barplot),
-    tabPanel("Prices of used cars over time", type_lineplot)
+    tabPanel("Price trends of used cars by type", type_lineplot),
+    tabPanel("Price trends of used cars by manufacturer and type", type_make_trend),
   )
 )
 
