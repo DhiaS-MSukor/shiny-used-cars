@@ -316,37 +316,48 @@ price_box <- function(input){
   }, height = 750) 
 }
 
-type_gam <- function(input){
+type_make_trend <- function(input, method){
   act1 <- reactive({   
-    data <- df[df$type %in% input$type_tl
-               , c('price', 'type', 'year')]     
+    data <- df[df$manufacturer %in% input$make_tr
+               , c('price', 'type', 'year', 'manufacturer')]      
     
     return(data)
   })   
   
   renderPlot({   
     act1() %>% 
-      ggplot(aes(x=year, y=price, group=type, color=type, fill=type)) +  
-      geom_smooth(method='gam', se=TRUE) +
+      ggplot(aes(x=year, y=price, group=manufacturer, color=manufacturer, fill=manufacturer)) +  
+      geom_smooth(method=method, se=TRUE) +
       xlab("") +
-      ylab("Price (US$)")
+      ylab("Price (US$)")+ 
+      facet_wrap(~type, ncol=3)
   }, height = 750) 
 }
 
-type_lm <- function(input){
+type_make_line<- function(input){
   act1 <- reactive({   
-    data <- df[df$type %in% input$type_tl
-               , c('price', 'type', 'year')]     
+    data <- df[df$manufacturer %in% input$make_tr
+               , c('price', 'type', 'year', 'manufacturer')]      
+    
+    data$make_type_year <- paste(data$manufacturer, data$type, data$year, sep='_')
+    data <- data %>% group_by(make_type_year) %>% summarise(price=median(price))
+    data <- data %>% separate(make_type_year, c('manufacturer','type', 'year'), extra='drop', sep='_') 
     
     return(data)
   })   
-  
   renderPlot({   
     act1() %>% 
-      ggplot(aes(x=year, y=price, group=type, color=type, fill=type)) +  
-      geom_smooth(method='lm', se=TRUE) +
+      ggplot(aes(x=year, y=price, group=manufacturer, color=manufacturer, fill=manufacturer)) + 
+      geom_point(shape=21, size=2) +  
+      geom_line()+
       xlab("") +
-      ylab("Price (US$)")
+      ylab("Median price (US$)")+ 
+      theme( 
+        panel.spacing = unit(0.1, "lines"), 
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        plot.title = element_text(size=14)
+      )+ 
+      facet_wrap(~type, ncol=3)
   }, height = 750) 
 }
 
@@ -420,9 +431,11 @@ shinyServer(function(input, output, session) {
   output$summary <- used_car_tmap_smry(input)
   output$most_available <- available_barchart(input, session)
   output$price_boxwhisker <- price_box(input)  
-  output$grouped_barplot <- type_bar(input)
-  output$type_gam <- type_gam(input)
-  output$type_lm <- type_lm(input)
+  output$grouped_barplot <- type_bar(input) 
+  output$type_make_line <- type_make_line(input)
+  output$type_make_gam <- type_make_trend(input, 'gam')
+  output$type_make_lm <- type_make_trend(input, 'lm')
+  output$type_make_loess <- type_make_trend(input, 'loess')
   output$type_line <- type_line(input)
   output$type_facetline <- type_facetline(input)
 })
