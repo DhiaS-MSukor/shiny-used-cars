@@ -169,6 +169,7 @@ clean <- clean[!is.na(clean$long),]
 clean$drive <- impute(clean$drive,'unknown')
 clean$size <- impute(clean$size,'unknown')
 clean$type <- impute(clean$type,'unknown')
+clean$type[clean$type == "other"] <-"unknown"
 clean$paint_color <- impute(clean$paint_color,'unknown')
 ```
 
@@ -182,11 +183,11 @@ sum(is.na(clean))
 
 ### extract unknown data from description
 
-* for manufacturer, condition, cylinders, fuel, title_status, transmission, drive, size, type, paint_color.
+-   for manufacturer, condition, cylinders, fuel, title_status, transmission, drive, size, type, paint_color.
 
-* this part will **waste huge time**, can just download the cleaned dataset from git.
+-   this part will **waste huge time**, can just download the cleaned dataset from git.
 
-1. manufacturer
+1.  manufacturer
 
 ```{r extract manufacturer}
 df.unknown = clean[clean$manufacturer=='unknown',]
@@ -203,7 +204,7 @@ for (i in li_descr){
 clean[clean$manufacturer=='unknown',] <- df.unknown
 ```
 
-2. condition
+2.  condition
 
 ```{r extract condition}
 df.unknown = clean[clean$condition=='unknown',]
@@ -220,7 +221,7 @@ for (i in li_descr){
 clean[clean$condition=='unknown',]$condition <- df.unknown$condition
 ```
 
-3. cylinders
+3.  cylinders
 
 ```{r extract cylinders}
 df.unknown = clean[clean$cylinders=='unknown',]
@@ -237,7 +238,7 @@ for (i in li_descr){
 clean[clean$cylinders=='unknown',]$cylinders <- df.unknown$cylinders
 ```
 
-4. fuel
+4.  fuel
 
 ```{r extract fuel}
 df.unknown = clean[clean$fuel=='unknown',]
@@ -254,7 +255,7 @@ for (i in li_descr){
 clean[clean$fuel=='unknown',]$fuel <- df.unknown$fuel
 ```
 
-5. title_status
+5.  title_status
 
 ```{r extract title_status}
 df.unknown = clean[clean$title_status=='missing',]
@@ -272,7 +273,7 @@ clean[clean$title_status=='missing',]$title_status <- df.unknown$title_status
 clean['title_status'][clean['title_status'] == 'missing'] <- 'unknown'
 ```
 
-6. transmission
+6.  transmission
 
 ```{r extract transmission}
 df.unknown = clean[clean$transmission=='unknown',]
@@ -289,7 +290,7 @@ for (i in li_descr){
 clean[clean$transmission=='unknown',]$transmission <- df.unknown$transmission
 ```
 
-7. drive
+7.  drive
 
 ```{r extract drive}
 df.unknown = clean[clean$drive=='unknown',]
@@ -306,7 +307,7 @@ for (i in li_descr){
 clean[clean$drive=='unknown',]$drive <- df.unknown$drive
 ```
 
-8. size
+8.  size
 
 ```{r extract size}
 df.unknown = clean[clean$size=='unknown',]
@@ -323,7 +324,7 @@ for (i in li_descr){
 clean[clean$size=='unknown',]$size <- df.unknown$size
 ```
 
-9. type
+9.  type
 
 ```{r extract type}
 df.unknown = clean[clean$type=='unknown',]
@@ -339,7 +340,6 @@ for (i in li_descr){
 }
 clean[clean$type=='unknown',]$type <- df.unknown$type
 ```
-
 
 10. paint_color
 
@@ -370,13 +370,12 @@ clean = select(clean,-description)
 clean['make_model'] <- paste(clean$manufacturer,clean$model,sep=':')
 ```
 
-
 #### Output clean data
 
 ```{r}
 write.csv(clean, "clean-vehicles.csv", row.names = F)
+write.csv(clean, "./shiny_vehicles/heatmap/clean-vehicles.csv", row.names = F)
 ```
-
 
 ## ***Misc.***
 
