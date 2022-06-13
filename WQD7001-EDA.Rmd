@@ -1,0 +1,420 @@
+---
+title: "WQD7001_GroupProject"
+author: "
+- Chan Jie Min (S2141167)
+
+- Dhia Syahmie Muhamad Sukor (S2147929)
+
+- Muhammad Shakyr Bin Rosman (S2152185)
+
+- Ruixue Zhang (S2142119)
+
+- Huijun Liu (S2142285)
+"
+output:
+ rmdformats::readthedown:
+ self_contained: true
+ thumbnails: true
+ lightbox: true
+ gallery: false
+ highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Group No: 4
+
+## Group Members
+
+-   Chan Jie Min (S2141167)
+
+-   Dhia Syahmie Muhamad Sukor (S2147929)
+
+-   Muhammad Shakyr Bin Rosman (S2152185)
+
+-   Ruixue Zhang (S2142119)
+
+-   Huijun Liu (S2142285)
+
+## Dataset
+
+-   Title: Used Cars Dataset
+
+-   Year: 2021
+
+-   Content: Craigslist is the world's largest collection of used vehicles for sale, yet it's very difficult to collect all of them in the same place. This dataset includes every used vehicle entry within the United States on Craigslist.
+
+-   Source: <https://www.kaggle.com/datasets/austinreese/craigslist-carstrucks-data>
+
+------------------------------------------------------------------------
+
+# 1 Introduction
+
+A good used car is a better depreciating asset to own than a new one. Using this Craigslist used car dataset and considering the last 20 years' worth of data we can predict the value of used cars.
+
+This data is scraped every few months, it contains most all relevant information that Craigslist provides on car sales including columns like price, condition, manufacturer, latitude/longitude, and 18 other categories. For ML projects, consider feature engineering on location columns such as long/lat.
+
+## 1.1 Project Objective
+
+We think that searching for a car is a daunting task. So, this shiny app will ease the process in recommending a type of car to purchase.
+
+## 1.2 Project Question
+
+-   What are customers preferences when buying used cars?
+
+-   Given the preferences of customers, what types of cars can be considered?
+
+# 2 Exploratory Data Analysis
+
+### Import libraries
+
+```{r}
+
+library(htmlwidgets)
+library(plotly)
+library(sf)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(tmap)
+library(tmaptools)
+library(shiny)
+library(shinythemes) 
+library(RColorBrewer) 
+library(hrbrthemes)
+library(viridis)
+library(tidyr)
+library(forcats)
+
+```
+
+### Read data
+
+```{r,message=FALSE}
+df = read.csv('clean-vehicles.csv',stringsAsFactors = T)
+#download.file("http://www2.census.gov/geo/tiger/GENZ2015/shp/cb_2015_us_state_20m.zip", destfile = "states.zip")
+#unzip("states.zip", exdir = 'states')
+us_geo<-read_sf("states/cb_2015_us_state_20m.shp")
+
+```
+
+### See the structure of dataset
+
+```{r str}
+str(df)
+
+```
+
+### 2.1 available_barchart
+
+```{r}
+data <- df[,c('year',"manufacturer","model")]
+data <- data[data$manufacturer == 'acura',]
+data$make_model <- paste(data$manufacturer, data$model)
+data <- data %>% group_by(make_model) %>% count()
+data <- data[order(data$n, decreasing = T),]
+
+
+```
+
+#### top 5 make-model posting number
+
+```{r}
+data <- data[0:5,]
+data
+```
+
+#### plot
+
+```{r}
+ggplot(data,aes(x=reorder(make_model, -n), y=n, fill=make_model)) +
+  geom_bar(stat = "identity", color='black') +
+  xlab("") +
+  ylab("Number of postings") +
+  theme(legend.position="none", axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+### 2.2 price_box
+
+```{r}
+data <- df[df$year >= 2000
+           & df$year <= 2020
+           & df$odometer >= 10000
+           & df$odometer <= 100000
+           , c("manufacturer",'price', 'type', 'model','state')] 
+data <- data[data$type == 'SUV',]
+data$make_model <- paste(data$manufacturer, data$model)
+grouped <- data %>% group_by(make_model) %>% count()
+grouped <- grouped[order(grouped$n, decreasing = T),]
+grouped <- grouped[0:20,]
+data <- merge(data,grouped, by='make_model')
+data <- data %>% mutate(make_model = fct_reorder(make_model, price))
+ggplot(data) +
+  geom_violin(width=1.0, mapping = aes(x=make_model, y=price, color='black', fill=make_model)) +
+  geom_boxplot(width=0.1, mapping = aes(x=make_model, y=price, color='black')) +  
+  theme(
+    legend.position="none"
+  ) +
+  coord_flip() + # This switch X and Y axis and allows to get the horizontal version
+  xlab("") +
+  ylab("Price (US$)")
+```
+
+### 2.3 type_make_trend
+
+```{r}
+data <- df[df$manufacturer %in% c('bmw','audi')
+           , c('price', 'type', 'year', 'manufacturer')] 
+ggplot(data,aes(x=year, y=price, group=manufacturer, color=manufacturer, fill=manufacturer)) +  
+  geom_smooth(method='lm', se=TRUE) +
+  xlab("") +
+  ylab("Price (US$)")+ 
+  facet_wrap(~type, ncol=3)
+```
+
+### 2.4 type_make_line
+
+```{r}
+data$make_type_year <- paste(data$manufacturer, data$type, data$year, sep='_')
+data <- data %>% group_by(make_type_year) %>% summarise(price=median(price))
+data <- data %>% separate(make_type_year, c('manufacturer','type', 'year'), extra='drop', sep='_')
+ggplot(data, aes(x=year, y=price, group=manufacturer, color=manufacturer, fill=manufacturer)) + 
+  geom_point(shape=21, size=2) +  
+  geom_line()+
+  xlab("") +
+  ylab("Median price (US$)")+ 
+  theme( 
+    panel.spacing = unit(0.1, "lines"), 
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+    plot.title = element_text(size=14)
+  )+ 
+  facet_wrap(~type, ncol=3)
+```
+
+### 2.5 type_line
+
+```{r}
+data <- df[df$type %in% c('bus','coupe','SUV')
+           , c('price', 'type', 'year')]
+
+data$type_year <- paste(data$type, data$year, sep='_')
+data <- data %>% group_by(type_year) %>% summarise(price=median(price))
+data <- data %>% separate(type_year, c('type', 'year'), extra='drop', sep='_') 
+ggplot(data, aes(x=year, y=price, group=type, color=type, fill=type)) + 
+  geom_point(shape=21, size=6) +  
+  geom_line(size=1.2)+
+  xlab("") +
+  ylab("Median price (US$)")
+```
+
+### 2.6 type_facetline
+
+```{r}
+data <- df[, c('price', 'type', 'year')]
+data$type_year <- paste(data$type, data$year, sep='_')
+data <- data %>% group_by(type_year) %>% summarise(price=median(price))
+data <- data %>% separate(type_year, c('type', 'year'), extra='drop', sep='_')
+data$type2 <- data$type
+ggplot(data, aes(x=year, y=price, group=type)) +  
+  geom_line( aes(color=type), size=1.2)+
+  xlab("") +
+  ylab("Median price (US$)")+
+  theme(
+    legend.position="none",
+    panel.spacing = unit(0.1, "lines"), 
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+    plot.title = element_text(size=14)
+  )+ 
+  facet_wrap(~type, ncol=3)
+```
+
+### 2.7 type_bar
+
+```{r}
+df['type_fuel'] <- paste(df$type,df$fuel,sep = '_')
+sub_df <- aggregate(df$price, by=list(type=df$type_fuel),mean)
+sub_df[c('type', 'fuel')] <- stringr::str_split_fixed(sub_df$type, '_', 2)
+sub_df <- sub_df[sub_df$type!='unknown'&sub_df$fuel!='unknown',]
+colnames(sub_df)[2] <- 'price'
+ggplot(sub_df, aes(x = type, y = price, fill = fuel))+
+  geom_bar(position = 'dodge', stat="identity", width = 0.7)+
+  xlim(c('bus','coupe','SUV'))
+```
+
+### 2.8 heatmap for all makes and types
+
+```{r df.subset}
+df.subset <- df %>% 
+        left_join(x = df %>% group_by(state) %>% count(sort = T) %>% ungroup(),
+                  y = aggregate(df$price, by=list(type=df$state),mean),
+                  by = c('state'='type')) %>% 
+        `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
+        mutate(state = toupper(state),`mean price` = as.integer(`mean price`)) # convert state.abb to uppercase
+head(df.subset)    # view data
+# integrate geodata
+carmap <- left_join(us_geo, df.subset, by = c('STUSPS'='state'), key.data = "full")
+carmap$`posting number` <- as.integer(carmap$`posting number`)
+# ignore some states
+carmap <- carmap[carmap$NAME!='Alaska'&carmap$NAME!='Hawaii'&carmap$NAME!='Puerto Rico',]
+
+tm <- tm_shape(carmap, name = 'all make&types',unit = 'km') +
+  tm_polygons(col = c('posting number','mean price'), 
+              id = 'NAME', style = "cont",
+              breaks = list(summary(carmap$`posting number`),
+                            summary(carmap$`mean price`)),
+              title = c('number of postings','average price'),
+              textNA = list('0','no posting'),
+              palette = get_brewer_pal("YlOrRd", plot = F, n = 10, 
+                                       contrast = c(0.17, 0.77))) +
+  tm_layout(title = 'The distribution of used-car-postings quantity in US')+
+  tm_scale_bar()+
+  tm_facets(as.layers = T)+
+  tm_text(text = 'STUSPS', size = 0.67)
+tmap.all.all <- tmap_leaflet(tm, in.shiny = T)
+tmap.all.all
+```
+
+#### heatmap for selected make (such as acura) and all types
+
+```{r li_make}
+df.make <- split(df, df$manufacturer)
+li_make <- list()
+for (i in 1:length(df.make)){
+  li_make[[i]] <- df.make[[i]] %>% 
+     left_join(x = df.make[[i]] %>% group_by(state) %>% count(sort = T) %>% ungroup(),
+               y = aggregate(df.make[[i]]$price,
+                             by=list(type=df.make[[i]]$state),mean),
+               by = c('state'='type')) %>% 
+     `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
+     mutate(state = toupper(state),
+            `mean price` = as.integer(`mean price`))    # convert state.abb to uppercase
+}
+names(li_make) <- sort(unique(df$manufacturer))
+carmap <- left_join(us_geo, li_make[['acura']], by = c('STUSPS'='state'), key.data = "full")
+carmap$`posting number` <- as.integer(carmap$`posting number`)
+carmap <- carmap[carmap$NAME!='Alaska'&carmap$NAME!='Hawaii'&carmap$NAME!='Puerto Rico',]
+
+```
+
+```{r tmap.make.all}
+tm <- tm_shape(carmap,unit = 'km') +
+  tm_polygons(col = c('posting number','mean price'), 
+              id = 'NAME', style = 'pretty',
+              title = c('number of postings','average price'),
+              textNA = list('0','no posting'),
+              palette = get_brewer_pal("YlOrRd", plot = F, n = 10, 
+                                       contrast = c(0.17, 0.77))) +
+  tm_layout(title = 'The distribution of used-car-postings quantity in US')+
+  tm_scale_bar()+
+  tm_facets(as.layers = T)+
+  tm_text(text = 'STUSPS', size = 0.67)
+tmap.acura.all <- tmap_leaflet(tm, in.shiny = T)
+tmap.acura.all
+
+```
+
+#### heatmap for all makes and selected types (such as coupe)
+
+```{r li_type}
+df.type <- split(df, df$type)
+li_type <- list()
+for (i in 1:length(df.type)){
+  li_type[[i]] <- df.type[[i]] %>% 
+     left_join(x = df.type[[i]] %>% group_by(state) %>% count(sort = T) %>% ungroup(),
+               y = aggregate(df.type[[i]]$price,
+                             by=list(type=df.type[[i]]$state),mean),
+               by = c('state'='type')) %>% 
+     `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
+     mutate(state = toupper(state),
+            `mean price` = as.integer(`mean price`))    # convert state.abb to uppercase
+}
+names(li_type) <- sort(unique(df$type))
+carmap <- left_join(us_geo, li_type[['coupe']], by = c('STUSPS'='state'), key.data = "full")
+carmap$`posting number` <- as.integer(carmap$`posting number`)
+carmap <- carmap[carmap$NAME!='Alaska'&carmap$NAME!='Hawaii'&carmap$NAME!='Puerto Rico',]
+
+```
+
+```{r tmap.all.type}
+tm <- tm_shape(carmap,unit = 'km') +
+  tm_polygons(col = c('posting number','mean price'), 
+              id = 'NAME', style = 'pretty',
+              title = c('number of postings','average price'),
+              textNA = list('0','no posting'),
+              palette = get_brewer_pal("YlOrRd", plot = F, n = 10, 
+                                       contrast = c(0.17, 0.77))) +
+  tm_layout(title = 'The distribution of used-car-postings quantity in US')+
+  tm_scale_bar()+
+  tm_facets(as.layers = T)+
+  tm_text(text = 'STUSPS', size = 0.67)
+tmap.all.coupe <- tmap_leaflet(tm, in.shiny = T)
+tmap.all.coupe
+```
+
+#### heatmap for selected make and type (such as acura_coupe)
+
+```{r li_make_type}
+# add a new column
+df['make_type'] <-  paste(df$manufacturer,df$type,sep = '_')
+df$make_type <- as.factor(df$make_type)
+df.make_type <- split(df,df$make_type)
+li_make_type <- list()
+for (i in 1:length(df.make_type)){
+  li_make_type[[i]] <- df.make_type[[i]] %>% 
+    left_join(x = df.make_type[[i]] %>% group_by(state) %>% 
+                count(sort = T) %>% ungroup(),
+              y = aggregate(df.make_type[[i]]$price,
+                            by=list(type=df.make_type[[i]]$state),mean),
+              by = c('state'='type')) %>% 
+    `colnames<-`(c('state','posting number','mean price')) %>%  # change colname
+    mutate(state = toupper(state),
+           `mean price` = as.integer(`mean price`))    # convert state.abb to uppercase
+}
+names(li_make_type) <- sort(unique(df$make_type))
+carmap <- left_join(us_geo,
+                    li_make_type[['acura_coupe']],
+                    by = c('STUSPS'='state'), key.data = "full")
+carmap$`posting number` <- as.integer(carmap$`posting number`)
+carmap <- carmap[carmap$NAME!='Alaska'&carmap$NAME!='Hawaii'&carmap$NAME!='Puerto Rico',]
+```
+
+```{r tmap.make.type}
+tm <- tm_shape(carmap,unit = 'km') +
+  tm_polygons(col = c('posting number','mean price'), 
+              id = 'NAME', style = 'pretty',
+              title = c('number of postings','average price'),
+              textNA = list('0','no posting'),
+              palette = get_brewer_pal("YlOrRd", plot = F, n = 10, 
+                                       contrast = c(0.17, 0.77))) +
+  tm_layout(title = 'The distribution of used-car-postings quantity in US')+
+  tm_scale_bar()+
+  tm_facets(as.layers = T)+
+  tm_text(text = 'STUSPS', size = 0.67)
+tmap.acura.coupe <- tmap_leaflet(tm, in.shiny = T)
+tmap.acura.coupe
+
+```
+
+#### heatmap for selected make and type (if have no posting of the selection, such as ferrari_bus)
+
+```{r tmap.noposting}
+
+df.subset <- df %>% group_by(state) %>% count() %>% ungroup() %>% 
+  mutate(state = toupper(state), n = 0)
+carmap <- left_join(us_geo, df.subset, by = c('STUSPS'='state'), key.data = "full")
+carmap <- carmap[carmap$NAME!='Alaska'&carmap$NAME!='Hawaii'&carmap$NAME!='Puerto Rico',]
+tm <- tm_shape(carmap, unit = 'km')+
+  tm_polygons(col = 'n', 
+              id = 'NAME', style = 'pretty',
+              title = 'number of postings',
+              textNA = '0',
+              palette = 'gray') +
+  tm_layout(title = 'The distribution of used-car-postings quantity in US')+
+  tm_scale_bar()+
+  tm_text(text = 'STUSPS', size = 0.67)
+tmap.noposting <- tmap_leaflet(tm, in.shiny = T)
+tmap.noposting
+
+```
