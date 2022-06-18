@@ -168,6 +168,18 @@ type_make_trend <- fluidPage(
     )
   )
 )
+user_manual <- fluidPage(
+  
+  titlePanel("User Manual"),
+    mainPanel(
+    tabsetPanel(
+      type = "tabs",
+      tabPanel("User Manual", htmlOutput("user.manual")),
+      tabPanel("About the dataset", htmlOutput("about.df")),
+      tabPanel("About Us", htmlOutput("about.us"))
+    )
+  )
+)
 
 # main page
 main_page <- fluidPage(
@@ -181,6 +193,7 @@ main_page <- fluidPage(
     tabPanel("Prices of cars for each type of fuel", grouped_barplot),
     tabPanel("Price trends of used cars by type", type_lineplot),
     tabPanel("Price trends of used cars by manufacturer and type", type_make_trend),
+    tabPanel("User Manual", user_manual)
   )
 )
 

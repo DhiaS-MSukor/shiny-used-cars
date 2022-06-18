@@ -425,6 +425,91 @@ type_bar <- function(input){
   })
 }
 
+user.manual <- function(input){
+  renderText({
+    HTML(paste(
+      '','<b>User Manual</b>',
+      '','Tab 1: Used car availability heatmap',
+      '','INPUT: Users can input their selection of “manufacturer” and “type” of used vehicles.',
+      '','OUTPUT: On the “map” tab, this reveals a heat map of the US where the colours indicate the number of postings and the average price of the used vehicles. A “summary” tab is also included to show a table that allows for ease of referencing.',
+      '',
+      '','Tab 2: Most available used cars',
+      '','INPUT: Users can input their selection of “manufacturer”, a range of “year(s)”, and the “number” of selections that they wish to display of used vehicles.',
+      '','OUTPUT: A bar graph is generated revealing all the various manufacturer’s top most widely available used cars based on the selected time period.',
+      '',
+      '','Tab 3: Price of top 20 most common used cars',
+      '','INPUT: Users can input their selection of “state”, “type”, a “year(s)” range, and an “odometer” range.',
+      '','UTPUT: A violin and box and whisker diagram is generated to show the prices of the top 20 most common used cars based on the user’s selected input.',
+      '',
+      '','Tab 4: Prices of cars for each type of fuel',
+      '','INPUT: Users can input their selection of one or more used vehicle “types”.',
+      '','OUTPUT: A grouped histogram is generated containing the breakdown for the prices of each of the five different fuel types for comparison.',
+      '',
+      '','Tab 5: Price trends of used cars by type',
+      '','INPUT: Users can input their selection of one or more used vehicle “type”.',
+      '','OUTPUT: A line graph showing the median prices of the selected used vehicle type across the years, from 1998-2020.',
+      '',
+      '','Tab 6: Price trends of used cars by manufacturer and type',
+      '','INPUT: Users can input their selection of “manufacturer” of the used vehicle.',
+      '','OUTPUT: A line graph showing the median price trends of used vehicles separated by manufacturer and type across the years from 1998-2020 is generated.', sep = "<br/>"
+    ))
+  })
+}
+
+about.df <- function(input){
+  renderText({
+    HTML(paste(
+      '','<b>About the Dataset</b>',
+      '','The dataset is obtained from Kaggle, where used car data is web scraped from the second-hand platform Craigslist in 2021.',
+      '','The explanation of each of the data attributes are as follows:',
+      '','  1. ID —> unique identification of each used vehicle',
+      '  2. Region —> Region in the US where the used vehicle is listed',
+      '  3. Price —> The price at each used vehicle is listed',
+      '  4. Year —> The year of when each used vehicle is manufactured',
+      '  5. Manufacturer —> The manufacturer of the used vehicle',
+      '  6. Model —> The model of the used vehicle',
+      '  7. Condition —> The condition of the used vehicle',
+      '  8. Cylinders —> The number of cylinders (horsepower) of each used vehicle',
+      '  9. Fuel —> The fuel type that each used vehicle requires',
+      '  10. Odometer —> The distance that each used vehicle has driven',
+      '  11. Transmission —> Whether the used vehicle is manual or automatic',
+      '  12. Drive —> Whether the used vehicle uses 4-wheel drive, rear wheel drive, or front wheel drive',
+      '  13. Size —> How large is each used vehicle',
+      '  14. Type —> The classification of each used vehicle (eg. Sedan, Bus, Coupe, etc.)',
+      '  15. Paint Colour —> The colour of the used vehicle',
+      '  16. State —> The state of where the used vehicle is located',
+      '  17. Latitude —> The latitude of where the used vehicle is located',
+      '  18. Longitude —> The longitude of where the used vehicle is located',
+      '  19. Posting Year —> The year of when each used vehicle is posted', sep = "<br/>"
+    ))
+  })
+}
+
+about.us <- function(input){
+  renderText({
+    HTML(paste(
+      '','<b>About Us</b>',
+      '','We are Group 4: The Slow and Steady 5, students of Dr Salimah’s WQD7001: Principles of Data Science class. This group project is part of the requirements of that class.',
+      'Group members: ',
+      '-   Chan Jie Min (S2141167)',
+      '-   Dhia Syahmie Muhamad Sukor (S2147929)',
+      '-   Muhammad Shakyr Bin Rosman (S2152185)',
+      '-   Ruixue Zhang (S2142119)',
+      '-   Huijun Liu (S2142285)',
+      '','<b>References and resources</b>',
+      '','  * GitHub repository: <a href="https://github.com/DhiaS-MSukor/shiny-used-cars" rel="nofollow">https://github.com/DhiaS-MSukor/shiny-used-cars</a>',
+      '  * Dataset: <a href="https://www.kaggle.com/datasets/austinreese/craigslist-carstrucks-data" rel="nofollow">https://www.kaggle.com/datasets/austinreese/craigslist-carstrucks-data</a>',
+      '','<b>Personal reflections of group project experience</b>',
+      'There have been many learning experiences throughout this semester.',
+      '','-   Chan Jie Min: Coming from a non-STEM background, this semester has been extremely challenging. However, I embrace the opportunity to up-skill myself, especially in R programming and computer science in general. In particular, I have learnt that not all problems can be solved with data science. It truly depends on various factors such as the availability of a suitable dataset, the hacking skills of the data scientist, as well as the domain knowledge in which the problem lies.',
+      '','-   Dhia Syahmie Muhamad Sukor: Before beginning programming the shiny app, we had to handle a challenging dataset that was filled with many missing variables as well as inconsistent observations. This meant that we had to impute missing variables and standardise formatting. In addition to that was the large size of the raw dataset which made processing it rather resource intensive, not to mention time consuming. Thus, I had to very quickly learn of the best ways to clean the data so that the team could begin the data science process. This meant collaborating with teammates on Github to ensure that we were all on the same page, which kept us constantly engaged.',
+      '','-   Muhammad Shakyr Bin Rosman: I understand that choosing an appropriate dataset is one of the fundamental aspect of ensuring that a data science project starts out right. Scouring through the internet for useful second-hand datasets that fulfils the criteria of problems that we are attempting to resolve is difficult, but I learned that there are many useful resources that are available thanks to a community that prioritises the sharing of data as well the reproducibility of data science work. I am grateful that these resources exist and understand the importance of contributing myself in the future.',
+      '','-   Ruixue Zhang: I was tasked with the programming of the shiny app, alongside another teammate. We explored various different types of data analysis to find out which graphs were the most useful. This meant reiterating the process of cleaning, exploring, and finally the creation of the shiny app multiple times. I remember that just by creating a heat map of the US to depict the number of cars and sale price of the cars took more than two days.',
+      '','-   Huijun Liu: This data science project has given me the opportunity to learn how to apply the data science process from start to finish. Working together in a team allows us to rely on each other whenever we fall short, for example, I have learnt many new packages and methods in R programming just from simply observing the code that is produced by my teammates. In turn, I am also able to share my expertise with the group and further the goals of the project as a whole.',
+      '','As a group, we would like to sincerely thank Dr Salimah from the bottom of our hearts for putting such care and thought into her lesson plans when teaching our class. Her unique teaching style has caused some much needed stress that propelled us into ensuring that work submitted is to the best of our abilities. All the best in your retirement, Dr.', sep = "<br/>"
+    ))
+  })
+}
 # Define server logic required to draw a Tmap
 shinyServer(function(input, output, session) {
   output$map <- used_car_tmap(input)
@@ -438,4 +523,7 @@ shinyServer(function(input, output, session) {
   output$type_make_loess <- type_make_trend(input, 'loess')
   output$type_line <- type_line(input)
   output$type_facetline <- type_facetline(input)
+  output$user.manual <- user.manual(input)
+  output$about.df <- about.df(input)
+  output$about.us <- about.us(input)
 })
