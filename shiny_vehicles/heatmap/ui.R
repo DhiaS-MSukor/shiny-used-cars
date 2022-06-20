@@ -183,7 +183,7 @@ user_manual <- fluidPage(
 
 # main page
 main_page <- fluidPage(
-  titlePanel("Shiny Used Car"),
+  titlePanel("Car-deal-ologist"),
   
   navlistPanel( 
     widths=c(2,8), 
